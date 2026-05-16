@@ -52,7 +52,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET: ${MINIO_BUCKET:-katibu-files}
-      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://api.katibu.my}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-https://katibu.my}
     depends_on:
       postgres:
         condition: service_healthy

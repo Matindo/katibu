@@ -365,7 +365,7 @@ All client requests go to **port 8080** (gateway).
 | `MINIO_ACCESS_KEY`  | `minioadmin`                              | MinIO access key                     |
 | `MINIO_SECRET_KEY`  | `minioadmin`                              | MinIO secret key                     |
 | `MINIO_BUCKET`      | `katibu-files`                            | MinIO bucket name (auto-created)     |
-| `PUBLIC_BASE_URL`   | `http://localhost:8080`                   | Base URL embedded in public link URLs |
+| `FRONTEND_BASE_URL` | `http://localhost:8080`                   | Frontend origin embedded in public share link URLs (must be the frontend domain, not the API) |
 | `CORE_SERVICE_URL`  | `http://localhost:8081`                   | Gateway → Core routing               |
 | `ALLOWED_ORIGINS`   | `*`                                       | Comma-separated CORS origins (gateway) |
 | `VUE_APP_API_URL`   | `https://api.katibu.my`                   | API base URL baked into the frontend bundle at build time |
@@ -430,7 +430,7 @@ openssl rand -hex 32
 
 Key production values:
 ```
-PUBLIC_BASE_URL=https://api.katibu.my
+FRONTEND_BASE_URL=https://katibu.my
 ALLOWED_ORIGINS=https://katibu.my,https://www.katibu.my
 VUE_APP_API_URL=https://api.katibu.my
 ```
@@ -581,11 +581,16 @@ Defined in `.github/workflows/ci.yml`. Triggers on every push and pull request t
 
 ### Pipeline stages
 
-| Stage | Trigger | What it does |
-|-------|---------|--------------|
-| `test-frontend` | push + PR | Installs Node 20, runs `npm run test:unit -- --ci --coverage`, uploads coverage artifact |
-| `test-backend` | push + PR | Starts a Postgres 15 service container, runs `mvn -B test` with real DB |
-| `build-push` | push to `main` only | Builds and pushes `frontend`, `core`, and `gateway` Docker images **in parallel** to Docker Hub |
+| Stage | Runs when | What it does |
+|-------|-----------|--------------|
+| `changes` | always | Detects which service paths changed using `dorny/paths-filter` |
+| `test-frontend` | `frontend/**` changed | Installs Node 20, runs `npm run test:unit -- --ci --coverage`, uploads coverage artifact |
+| `test-backend` | `backend/**` or `pom.xml` changed | Starts a Postgres 15 service container, runs `mvn -B test` with real DB |
+| `build-frontend` | push to `main` + frontend changed + tests passed | Builds and pushes `frontend` image to Docker Hub |
+| `build-core` | push to `main` + `backend/core/**` or `pom.xml` changed + tests passed | Builds and pushes `core` image to Docker Hub |
+| `build-gateway` | push to `main` + `backend/gateway/**` or `pom.xml` changed + tests passed | Builds and pushes `gateway` image to Docker Hub |
+
+Only the service whose source changed is tested and built. A frontend-only commit never triggers a backend test or a core/gateway image build, and vice versa. Changing `pom.xml` triggers both core and gateway builds since it is a shared dependency.
 
 ### Docker images
 

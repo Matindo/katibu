@@ -77,6 +77,36 @@
           </button>
         </div>
 
+        <!-- ── Generated Files ──────────────────────────────── -->
+        <div class="section-block" v-if="files.length">
+          <div class="section-row">
+            <h2 class="section-title">Generated Files</h2>
+            <span class="text-light text-sm">{{ files.length }} file{{ files.length !== 1 ? 's' : '' }}</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>File</th><th>Type</th><th>Report</th><th>Size</th><th>Generated</th><th></th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="f in files" :key="f.id">
+                  <td class="text-sm">{{ f.fileName }}</td>
+                  <td><span class="type-tag">{{ f.fileType }}</span></td>
+                  <td class="text-light text-sm">{{ f.reportType }}</td>
+                  <td class="text-light text-sm">{{ fmtSize(f.sizeBytes) }}</td>
+                  <td class="text-light text-sm">{{ f.createdAt ? f.createdAt.slice(0, 10) : '—' }}</td>
+                  <td>
+                    <button class="btn btn-ghost btn-sm" @click="downloadFile(f)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><path d="M12 15V3m0 12-4-4m4 4 4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17"/></svg>
+                      Download
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- ── Ledger table ──────────────────────────────────── -->
         <div class="section-block">
           <div class="section-row">
@@ -282,7 +312,7 @@ export default {
   name: 'ProjectView',
   data () {
     return {
-      project: null, entries: [], members: [], links: [],
+      project: null, entries: [], members: [], links: [], files: [],
       loading: false, error: '',
       showEntry: false, entryLoading: false, entryError: '',
       entryForm: { entryType: '', amount: '', transactionDate: '', description: '', reference: '' },
@@ -306,9 +336,10 @@ export default {
       this.loading = true; this.error = ''
       const id = this.$route.params.id
       try {
-        const [proj, ents] = await Promise.all([api.projects.get(id), api.ledger.list(id)])
+        const [proj, ents, files] = await Promise.all([api.projects.get(id), api.ledger.list(id), api.files.list(id)])
         this.project = proj
         this.entries = ents
+        this.files = files
         this.editForm = { name: proj.name, description: proj.description || '' }
         this.$store.dispatch('setCurrentProject', proj)
         if (this.isCreator) {
@@ -319,7 +350,26 @@ export default {
       finally { this.loading = false }
     },
     fmt (n) { return Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 2 }) },
+    fmtSize (bytes) {
+      if (!bytes) return '—'
+      if (bytes < 1024) return bytes + ' B'
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
+      return (bytes / 1048576).toFixed(1) + ' MB'
+    },
     initial (name) { return (name || '?')[0].toUpperCase() },
+    async downloadFile (file) {
+      try {
+        const blob = await api.files.download(this.project.id, file.id)
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = file.fileName
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      } catch (e) { this.$toast.error(e?.message || 'Download failed.') }
+    },
     goReports () { this.$router.push(`/projects/${this.project.id}/reports`) },
 
     async saveEntry () {

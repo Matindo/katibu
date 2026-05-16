@@ -25,8 +25,8 @@ public class PublicLinkService {
     private final ProjectService projectService;
     private final AuthService authService;
 
-    @Value("${app.public-base-url}")
-    private String publicBaseUrl;
+    @Value("${app.frontend-base-url}")
+    private String frontendBaseUrl;
 
     @Transactional
     public PublicLinkResponse generate(UUID projectId, GenerateLinkRequest req, String userEmail) {
@@ -71,7 +71,7 @@ public class PublicLinkService {
     }
 
     private PublicLinkResponse toResponse(PublicLink link) {
-        String url = publicBaseUrl + "/public/" + link.getToken();
+        String url = frontendBaseUrl + "/public/" + link.getToken();
         return new PublicLinkResponse(link.getId(), link.getToken(), url,
                 link.getExpiresAt(), link.isActive(), link.getCreatedAt());
     }
