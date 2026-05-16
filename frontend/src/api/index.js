@@ -104,6 +104,7 @@ export default {
 
   // Public (no auth)
   public: {
+    info: token => api.get(`/public/${token}/info`),
     summary: (token, params) => api.get(`/public/${token}/summary`, { params }),
     receiptsPayments: (token, params) => api.get(`/public/${token}/receipts-payments`, { params }),
     cashFlow: (token, params) => api.get(`/public/${token}/cash-flow`, { params }),

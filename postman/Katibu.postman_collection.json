@@ -743,6 +743,34 @@
       "name": "Public Access (No Auth)",
       "item": [
         {
+          "name": "Public Info",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/public/{{public_token}}/info",
+              "host": ["{{base_url}}"],
+              "path": ["public","{{public_token}}","info"]
+            },
+            "description": "Resolve a public token and return the project name. Used by the public report view to display the project name in the header before any report is run."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Returns project name', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.projectId).to.be.a('string');",
+                  "  pm.expect(d.projectName).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Public Summary",
           "request": {
             "method": "GET",

@@ -295,17 +295,18 @@ Range reports use `startDate` and `endDate` query params (`YYYY-MM-DD`). Point-i
 
 ### Public Access (No Auth)
 
-Same reports as the authenticated endpoints, accessed via a shared token. Params are identical.
+All endpoints are token-scoped and require no authentication.
 
-| Method | Path                                         | Description                        |
-|--------|----------------------------------------------|------------------------------------|
-| GET    | `/public/{token}/summary`                    | Public summary report              |
-| GET    | `/public/{token}/receipts-payments`          | Public receipts & payments report  |
-| GET    | `/public/{token}/cash-flow`                  | Public cash flow statement         |
-| GET    | `/public/{token}/financial-position`         | Public financial position          |
-| GET    | `/public/{token}/general-ledger`             | Public general ledger              |
-| GET    | `/public/{token}/trial-balance`              | Public trial balance               |
-| GET    | `/public/{token}/balance-sheet`              | Public balance sheet               |
+| Method | Path                                         | Params               | Description                                         |
+|--------|----------------------------------------------|----------------------|-----------------------------------------------------|
+| GET    | `/public/{token}/info`                       | —                    | Resolve token → return `projectId` and `projectName`|
+| GET    | `/public/{token}/summary`                    | `startDate, endDate` | Summary report                                      |
+| GET    | `/public/{token}/receipts-payments`          | `startDate, endDate` | Receipts & payments (IPSAS 2)                       |
+| GET    | `/public/{token}/cash-flow`                  | `startDate, endDate` | Cash flow statement (IFRS)                          |
+| GET    | `/public/{token}/financial-position`         | `asAt`               | Statement of financial position                     |
+| GET    | `/public/{token}/general-ledger`             | `startDate, endDate` | General ledger with DR/CR and running balance       |
+| GET    | `/public/{token}/trial-balance`              | `asAt`               | Trial balance                                       |
+| GET    | `/public/{token}/balance-sheet`              | `asAt`               | Balance sheet                                       |
 
 ### File Exports
 

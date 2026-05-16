@@ -3,6 +3,7 @@ package com.katibu.controller;
 import com.katibu.domain.entity.Project;
 import com.katibu.dto.response.ApiResponse;
 import com.katibu.dto.response.report.*;
+import java.util.Map;
 import com.katibu.service.PublicLinkService;
 import com.katibu.service.ReportService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,12 @@ public class PublicController {
 
     private final PublicLinkService publicLinkService;
     private final ReportService reportService;
+
+    @GetMapping("/{token}/info")
+    public ApiResponse<Map<String, Object>> info(@PathVariable String token) {
+        Project project = publicLinkService.resolveToken(token);
+        return ApiResponse.ok(Map.of("projectId", project.getId(), "projectName", project.getName()));
+    }
 
     @GetMapping("/{token}/summary")
     public ApiResponse<SummaryReport> summary(

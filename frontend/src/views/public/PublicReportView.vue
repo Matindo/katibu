@@ -6,10 +6,7 @@
 
       <template v-else>
         <div class="pub-header glass">
-          <div class="pub-logo">
-            <img class="pub-logo-img" src="@/assets/images/high-resolution-color-logo.png" alt="Katibu"/>
-            <span class="pub-logo-text">Katibu</span>
-          </div>
+          <div class="pub-project-name">{{ projectName }}</div>
           <div class="pub-badge badge badge-gold">Public Report — Read Only</div>
         </div>
 
@@ -189,7 +186,8 @@ export default {
       reportType: 'receipts-payments',
       startDate: today.slice(0, 8) + '01',
       endDate: today,
-      report: null, loading: false, error: '', loadError: ''
+      report: null, loading: false, error: '', loadError: '',
+      projectName: ''
     }
   },
   computed: {
@@ -205,6 +203,14 @@ export default {
         'trial-balance': 'Trial Balance',
         'balance-sheet': 'Balance Sheet'
       }[this.reportType]
+    }
+  },
+  async mounted () {
+    try {
+      const info = await api.public.info(this.token)
+      this.projectName = info.projectName
+    } catch (e) {
+      this.loadError = e?.message || 'This link is invalid or has expired.'
     }
   },
   methods: {
@@ -234,9 +240,7 @@ export default {
 
 <style scoped>
 .pub-header { display: flex; align-items: center; justify-content: space-between; border-radius: var(--r-md); padding: 14px 20px; margin-bottom: 24px; box-shadow: var(--sh-sm); }
-.pub-logo { display: flex; align-items: center; gap: 8px; }
-.pub-logo-img { width: 28px; height: 28px; object-fit: contain; }
-.pub-logo-text { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: var(--green-deep); }
+.pub-project-name { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; color: var(--green-deep); }
 
 .controls-card { margin-bottom: 8px; }
 .controls-grid { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 16px; align-items: end; }

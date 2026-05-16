@@ -5,7 +5,6 @@
       <!-- Logo -->
       <router-link to="/" class="nav-logo">
         <img class="logo-icon" src="@/assets/images/high-resolution-color-logo.png" alt="Katibu"/>
-        <span class="logo-text">Katibu</span>
       </router-link>
 
       <!-- Desktop links -->
@@ -135,12 +134,8 @@ export default {
 }
 
 /* Logo */
-.nav-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.logo-icon { width: 36px; height: 36px; object-fit: contain; }
-.logo-text {
-  font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700;
-  color: var(--green-deep); letter-spacing: -0.02em;
-}
+.nav-logo { display: flex; align-items: center; flex-shrink: 0; }
+.logo-icon { width: 44px; height: 44px; object-fit: contain; }
 
 /* Desktop links */
 .nav-links { display: flex; align-items: center; gap: 28px; }

@@ -7,7 +7,6 @@
       <div class="auth-logo">
         <router-link to="/" class="auth-brand">
           <img class="auth-brand-logo" src="@/assets/images/high-resolution-color-logo.png" alt="Katibu"/>
-          <span>Katibu</span>
         </router-link>
       </div>
 
@@ -100,9 +99,8 @@ export default {
   padding: 48px 40px; box-shadow: var(--sh-lg); position: relative; z-index: 1;
 }
 .auth-logo { text-align: center; margin-bottom: 24px; }
-.auth-brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
-.auth-brand-logo { width: 40px; height: 40px; object-fit: contain; }
-.auth-brand span { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--green-deep); }
+.auth-brand { display: inline-flex; text-decoration: none; }
+.auth-brand-logo { width: 56px; height: 56px; object-fit: contain; }
 
 .auth-card h2 { text-align: center; font-size: 1.6rem; margin-bottom: 8px; }
 .auth-sub { text-align: center; color: var(--text-mid); font-size: 0.9375rem; margin-bottom: 28px; }

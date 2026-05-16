@@ -7,7 +7,6 @@
         <div class="footer-brand">
           <div class="footer-logo">
             <img class="footer-logo-img" src="@/assets/images/high-resolution-logo-grayscale.png" alt="Katibu"/>
-            <span class="footer-logo-text">Katibu</span>
           </div>
           <p class="footer-tagline">
             Financial records, accountability &amp; reporting for teams and SMEs. Cash-based. Transparent. Trustworthy.
@@ -85,12 +84,8 @@ export default {
 }
 
 /* Brand */
-.footer-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-.footer-logo-img { width: 32px; height: 32px; object-fit: contain; }
-.footer-logo-text {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.4rem; font-weight: 700; color: var(--white);
-}
+.footer-logo { display: flex; align-items: center; margin-bottom: 16px; }
+.footer-logo-img { width: 42px; height: 42px; object-fit: contain; }
 .footer-tagline { font-size: 0.9rem; color: rgba(255,255,255,0.6); line-height: 1.7; max-width: 280px; }
 
 /* Columns */
