@@ -4,13 +4,7 @@
 
       <!-- Logo -->
       <router-link to="/" class="nav-logo">
-        <svg class="logo-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="18" cy="18" r="18" fill="#2D6A4F"/>
-          <path d="M18 9C18 9 26 11.5 27 18C28 24.5 18 27 18 27C18 27 8 24.5 9 18C10 11.5 18 9 18 9Z" fill="#74C69D" opacity="0.7"/>
-          <line x1="18" y1="14" x2="18" y2="27" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <line x1="18" y1="19" x2="13" y2="15.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <line x1="18" y1="23" x2="23" y2="19.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
+        <img class="logo-icon" src="@/assets/images/high-resolution-color-logo.png" alt="Katibu"/>
         <span class="logo-text">Katibu</span>
       </router-link>
 
@@ -142,7 +136,7 @@ export default {
 
 /* Logo */
 .nav-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.logo-icon { width: 36px; height: 36px; }
+.logo-icon { width: 36px; height: 36px; object-fit: contain; }
 .logo-text {
   font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700;
   color: var(--green-deep); letter-spacing: -0.02em;

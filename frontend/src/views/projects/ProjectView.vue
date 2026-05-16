@@ -329,23 +329,26 @@ export default {
         this.showEntry = false
         this.entryForm = { entryType: '', amount: '', transactionDate: '', description: '', reference: '' }
         this.entries = await api.ledger.list(this.project.id)
-      } catch (e) { this.entryError = e?.message || 'Failed to save.' }
+        this.$toast.success('Transaction recorded')
+      } catch (e) { this.entryError = e?.message || 'Failed to save transaction.' }
       finally { this.entryLoading = false }
     },
-    async deleteEntry (e) {
-      if (!confirm(`Delete this ${e.entryType} entry? It will be soft-deleted.`)) return
+    async deleteEntry (entry) {
+      if (!window.confirm(`Delete this ${entry.entryType} entry?`)) return
       try {
-        await api.ledger.delete(this.project.id, e.id)
-        this.entries = this.entries.filter(x => x.id !== e.id)
-      } catch (err) { alert(err?.message || 'Failed to delete.') }
+        await api.ledger.delete(this.project.id, entry.id)
+        this.entries = this.entries.filter(x => x.id !== entry.id)
+        this.$toast.success('Entry deleted')
+      } catch (err) { this.$toast.error(err?.message || 'Failed to delete entry.') }
     },
 
     async generateLink () {
       this.linkError = ''; this.linkLoading = true
       try {
-        const res = await api.links.generate(this.project.id, { expiresAt: this.linkExpiry || null })
-        this.links.unshift(res)
+        const link = await api.links.generate(this.project.id, { expiresAt: this.linkExpiry || null })
+        this.links.unshift(link)
         this.linkExpiry = ''
+        this.$toast.success('Public link generated')
       } catch (e) { this.linkError = e?.message || 'Failed to generate link.' }
       finally { this.linkLoading = false }
     },
@@ -354,40 +357,49 @@ export default {
         await api.links.revoke(this.project.id, linkId)
         const l = this.links.find(x => x.id === linkId)
         if (l) l.active = false
-      } catch (e) { alert(e?.message || 'Failed to revoke.') }
+        this.$toast.success('Link revoked')
+      } catch (e) { this.$toast.error(e?.message || 'Failed to revoke link.') }
     },
-    copyLink (url) { navigator.clipboard.writeText(url).then(() => alert('Copied to clipboard.')) },
+    copyLink (url) {
+      navigator.clipboard.writeText(url).then(() => this.$toast.info('Link copied to clipboard'))
+    },
 
     async addMember () {
       this.memberError = ''; this.memberLoading = true
       try {
         const m = await api.projects.addMember(this.project.id, { email: this.memberEmail })
-        this.members.push(m); this.memberEmail = ''
+        this.members.push(m)
+        this.memberEmail = ''
+        this.$toast.success('Member added successfully')
       } catch (e) { this.memberError = e?.message || 'Failed to add member.' }
       finally { this.memberLoading = false }
     },
     async removeMember (userId) {
-      if (!confirm('Remove this member from the project?')) return
+      if (!window.confirm('Remove this member from the project?')) return
       try {
         await api.projects.removeMember(this.project.id, userId)
         this.members = this.members.filter(m => m.userId !== userId)
-      } catch (e) { alert(e?.message || 'Failed to remove.') }
+        this.$toast.success('Member removed')
+      } catch (e) { this.$toast.error(e?.message || 'Failed to remove member.') }
     },
 
     async saveEdit () {
       this.editError = ''; this.editLoading = true
       try {
         const updated = await api.projects.update(this.project.id, this.editForm)
-        this.project = updated; this.showEdit = false
-      } catch (e) { this.editError = e?.message || 'Failed to update.' }
+        this.project = updated
+        this.showEdit = false
+        this.$toast.success('Project updated')
+      } catch (e) { this.editError = e?.message || 'Failed to update project.' }
       finally { this.editLoading = false }
     },
     async confirmArchive () {
-      if (!confirm(`Archive "${this.project.name}"? The project will become read-only.`)) return
+      if (!window.confirm(`Archive "${this.project.name}"? The project will become read-only.`)) return
       try {
         const updated = await api.projects.archive(this.project.id)
         this.project = updated
-      } catch (e) { alert(e?.message || 'Failed to archive.') }
+        this.$toast.success('Project archived')
+      } catch (e) { this.$toast.error(e?.message || 'Failed to archive project.') }
     }
   }
 }

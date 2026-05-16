@@ -7,13 +7,7 @@
       <template v-else>
         <div class="pub-header glass">
           <div class="pub-logo">
-            <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
-              <circle cx="18" cy="18" r="18" fill="#2D6A4F"/>
-              <path d="M18 9C18 9 26 11.5 27 18C28 24.5 18 27 18 27C18 27 8 24.5 9 18C10 11.5 18 9 18 9Z" fill="#74C69D" opacity="0.7"/>
-              <line x1="18" y1="14" x2="18" y2="27" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-              <line x1="18" y1="19" x2="13" y2="15.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-              <line x1="18" y1="23" x2="23" y2="19.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
+            <img class="pub-logo-img" src="@/assets/images/high-resolution-color-logo.png" alt="Katibu"/>
             <span class="pub-logo-text">Katibu</span>
           </div>
           <div class="pub-badge badge badge-gold">Public Report — Read Only</div>
@@ -153,6 +147,7 @@ export default {
 <style scoped>
 .pub-header { display: flex; align-items: center; justify-content: space-between; border-radius: var(--r-md); padding: 14px 20px; margin-bottom: 24px; box-shadow: var(--sh-sm); }
 .pub-logo { display: flex; align-items: center; gap: 8px; }
+.pub-logo-img { width: 28px; height: 28px; object-fit: contain; }
 .pub-logo-text { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: var(--green-deep); }
 
 .controls-card { margin-bottom: 8px; }

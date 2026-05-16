@@ -20,11 +20,11 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ApiResponse.ok(authService.register(request));
+        return ApiResponse.ok(authService.register(request), "Account created successfully");
     }
 
     @PostMapping("/login")
     public ApiResponse<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ApiResponse.ok(authService.login(request));
+        return ApiResponse.ok(authService.login(request), "Welcome back");
     }
 }

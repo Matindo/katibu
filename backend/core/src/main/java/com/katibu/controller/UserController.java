@@ -26,13 +26,13 @@ public class UserController {
     @PutMapping("/me")
     public ApiResponse<UserResponse> updateProfile(Principal principal,
                                                     @Valid @RequestBody UpdateProfileRequest request) {
-        return ApiResponse.ok(authService.updateProfile(principal.getName(), request));
+        return ApiResponse.ok(authService.updateProfile(principal.getName(), request), "Profile updated successfully");
     }
 
     @PutMapping("/me/password")
     public ApiResponse<Void> changePassword(Principal principal,
                                              @Valid @RequestBody ChangePasswordRequest request) {
         authService.changePassword(principal.getName(), request);
-        return ApiResponse.ok(null);
+        return ApiResponse.ok(null, "Password updated successfully");
     }
 }

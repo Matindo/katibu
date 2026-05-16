@@ -15,7 +15,6 @@
           <div class="divider"></div>
 
           <div v-if="detailsError" class="alert alert-error">{{ detailsError }}</div>
-          <div v-if="detailsSuccess" class="alert alert-success">{{ detailsSuccess }}</div>
 
           <form @submit.prevent="saveDetails">
             <div class="form-group">
@@ -39,7 +38,6 @@
           <div class="divider"></div>
 
           <div v-if="pwError" class="alert alert-error">{{ pwError }}</div>
-          <div v-if="pwSuccess" class="alert alert-success">{{ pwSuccess }}</div>
 
           <form @submit.prevent="changePassword">
             <div class="form-group">
@@ -102,8 +100,8 @@ export default {
     return {
       details: { fullName: '', email: '' },
       pw: { current: '', next: '', confirm: '' },
-      detailsLoading: false, detailsError: '', detailsSuccess: '',
-      pwLoading: false, pwError: '', pwSuccess: '',
+      detailsLoading: false, detailsError: '',
+      pwLoading: false, pwError: '',
       showPw: false,
       createdAt: null
     }
@@ -119,9 +117,9 @@ export default {
   async created () {
     try {
       const profile = await api.users.me()
-      this.details.fullName = profile.data.fullName || ''
-      this.details.email = profile.data.email || ''
-      this.createdAt = profile.data.createdAt
+      this.details.fullName = profile.fullName || ''
+      this.details.email = profile.email || ''
+      this.createdAt = profile.createdAt
     } catch {
       if (this.currentUser) {
         this.details.fullName = this.currentUser.fullName || ''
@@ -131,12 +129,12 @@ export default {
   },
   methods: {
     async saveDetails () {
-      this.detailsError = ''; this.detailsSuccess = ''
+      this.detailsError = ''
       this.detailsLoading = true
       try {
         const res = await api.users.update(this.details)
-        this.$store.dispatch('updateUser', { fullName: res.data.fullName, email: res.data.email })
-        this.detailsSuccess = 'Details updated successfully.'
+        this.$store.dispatch('updateUser', { fullName: res.fullName, email: res.email })
+        this.$toast.success('Profile updated successfully')
       } catch (e) {
         this.detailsError = e?.message || 'Failed to update details.'
       } finally {
@@ -144,13 +142,13 @@ export default {
       }
     },
     async changePassword () {
-      this.pwError = ''; this.pwSuccess = ''
+      this.pwError = ''
       if (this.pw.next !== this.pw.confirm) { this.pwError = 'New passwords do not match.'; return }
       this.pwLoading = true
       try {
         await api.users.changePassword({ currentPassword: this.pw.current, newPassword: this.pw.next })
-        this.pwSuccess = 'Password updated successfully.'
         this.pw = { current: '', next: '', confirm: '' }
+        this.$toast.success('Password updated successfully')
       } catch (e) {
         this.pwError = e?.message || 'Failed to update password.'
       } finally {

@@ -174,8 +174,8 @@ export default {
       try {
         const typeMap = { 'summary': 'SUMMARY', 'receipts-payments': 'RECEIPTS_PAYMENTS', 'cash-flow': 'CASH_FLOW', 'financial-position': 'FINANCIAL_POSITION' }
         await api.files.export(this.projectId, { fileType, reportType: typeMap[this.reportType], startDate: this.startDate, endDate: this.endDate })
-        alert(`${fileType} export queued — check the project files list.`)
-      } catch (e) { alert(e?.message || 'Export failed.') }
+        this.$toast.success(`${fileType} export queued — check the project files list`)
+      } catch (e) { this.$toast.error(e?.message || 'Export failed.') }
       finally { this.exporting = false }
     },
     fmt (n) { return Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 2 }) },

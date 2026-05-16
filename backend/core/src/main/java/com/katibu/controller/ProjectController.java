@@ -26,7 +26,7 @@ public class ProjectController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<ProjectResponse> create(@Valid @RequestBody CreateProjectRequest req, Authentication auth) {
-        return ApiResponse.ok(projectService.create(req, auth.getName()));
+        return ApiResponse.ok(projectService.create(req, auth.getName()), "Project created successfully");
     }
 
     @GetMapping
@@ -43,12 +43,12 @@ public class ProjectController {
     public ApiResponse<ProjectResponse> update(@PathVariable UUID id,
                                                @Valid @RequestBody UpdateProjectRequest req,
                                                Authentication auth) {
-        return ApiResponse.ok(projectService.update(id, req, auth.getName()));
+        return ApiResponse.ok(projectService.update(id, req, auth.getName()), "Project updated successfully");
     }
 
     @PostMapping("/{id}/archive")
     public ApiResponse<ProjectResponse> archive(@PathVariable UUID id, Authentication auth) {
-        return ApiResponse.ok(projectService.archive(id, auth.getName()));
+        return ApiResponse.ok(projectService.archive(id, auth.getName()), "Project archived");
     }
 
     @GetMapping("/{id}/members")
@@ -61,7 +61,7 @@ public class ProjectController {
     public ApiResponse<MemberResponse> addMember(@PathVariable UUID id,
                                                  @Valid @RequestBody AddMemberRequest req,
                                                  Authentication auth) {
-        return ApiResponse.ok(projectService.addMember(id, req, auth.getName()));
+        return ApiResponse.ok(projectService.addMember(id, req, auth.getName()), "Member added successfully");
     }
 
     @DeleteMapping("/{id}/members/{userId}")

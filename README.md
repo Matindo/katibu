@@ -52,7 +52,7 @@ katibu/
 │   │       │   ├── java/com/katibu/
 │   │       │   │   ├── KatibuApplication.java
 │   │       │   │   ├── config/
-│   │       │   │   │   ├── SecurityConfig.java       # JWT filter chain, CORS, password encoder
+│   │       │   │   │   ├── SecurityConfig.java       # JWT filter chain, CORS, password encoder; /actuator/health permitted without auth
 │   │       │   │   │   └── MinioConfig.java          # MinIO client bean
 │   │       │   │   ├── domain/
 │   │       │   │   │   ├── entity/
@@ -130,7 +130,7 @@ katibu/
 │   │       │   │       ├── PublicController.java      # /public/{token}/** (no auth)
 │   │       │   │       └── FileController.java        # /projects/{id}/files/**
 │   │       │   └── resources/
-│   │       │       ├── application.yml
+│   │       │       ├── application.yml               # DB, JWT, MinIO, Flyway; exposes only /actuator/health
 │   │       │       └── db/migration/
 │   │       │           └── V1__initial_schema.sql
 │   │       └── test/java/com/katibu/
@@ -143,16 +143,25 @@ katibu/
 │           │   ├── java/com/katibu/gateway/
 │           │   │   └── GatewayApplication.java
 │           │   └── resources/
-│           │       └── application.yml   # routes all /** → core on 8081
+│           │       └── application.yml   # routes all /** → core on 8081; exposes only /actuator/health
 │           └── test/java/com/katibu/gateway/
 │               └── GatewayApplicationTests.java
 │
 ├── frontend/                         # Vue.js 2 PWA (Options API, no Vite)
-│   ├── Dockerfile                    # Multi-stage: node:20-alpine build → nginx:stable-alpine serve
+│   ├── Dockerfile                    # Multi-stage: node:20-alpine build → nginx:stable-alpine serve (curl installed for healthcheck)
 │   ├── nginx.conf                    # SPA fallback + cache headers (copied into container)
 │   ├── package.json
 │   ├── vue.config.js                 # PWA plugin config (name, icons, workbox)
-│   ├── jest.config.js
+│   ├── jest.config.js                # Uses @vue/cli-plugin-unit-jest preset (jest 27)
+│   ├── babel.config.js               # @babel/preset-env targeting current Node (required by jest)
+│   ├── tests/
+│   │   └── unit/                     # Jest unit tests (run: npm run test:unit)
+│   │       ├── store.spec.js         # Vuex auth store
+│   │       ├── api.spec.js           # Axios interceptor + envelope unwrap
+│   │       ├── toast.spec.js         # Toast plugin state management
+│   │       ├── AppToast.spec.js      # Toast UI component
+│   │       ├── LoginView.spec.js     # Login form + auth flow
+│   │       └── RegisterView.spec.js  # Register form + validation
 │   ├── public/
 │   │   ├── index.html                # PWA meta tags, manifest link
 │   │   ├── favicon.ico
@@ -176,9 +185,12 @@ katibu/
 │       │   ├── projects/             # ProjectsView, ProjectView (dashboard)
 │       │   ├── reports/              # ReportsView
 │       │   └── public/               # PublicReportView (no auth)
+│       ├── plugins/
+│       │   └── toast.js              # Vue.observable toast plugin ($toast.success/error/warning/info)
 │       └── components/
 │           ├── NavBar.vue            # Sticky glass navbar + user dropdown + mobile drawer
-│           └── AppFooter.vue         # Dark footer with links and Bysonic Inc. trademark
+│           ├── AppFooter.vue         # Dark footer with links and Bysonic Inc. trademark
+│           └── AppToast.vue          # Fixed top-right toast container (5s auto-dismiss, 4 types)
 │
 ├── nginx/
 │   ├── api.katibu.my.conf            # NPM reference (proxy host settings)
@@ -463,9 +475,14 @@ This is a safety net for NPM's proxy layer. The frontend container's internal ng
 ### 6. Verify
 
 ```bash
-# API gateway is up
-curl https://api.katibu.my/auth/login
-# → {"success":false,"message":"..."}  (server is responding)
+# Gateway health (Spring Actuator)
+curl https://api.katibu.my/actuator/health
+# → {"status":"UP"}
+
+# Core health via gateway (same endpoint, proxied through)
+# The gateway's own /actuator/health responds directly — the core's endpoint is at :8081 internally
+docker exec katibu-core curl -sf http://localhost:8081/actuator/health
+# → {"status":"UP"}
 
 # Frontend is up
 curl -s -o /dev/null -w "%{http_code}" https://katibu.my/
@@ -474,6 +491,9 @@ curl -s -o /dev/null -w "%{http_code}" https://katibu.my/
 # SPA routing works (deep link must return 200, not 404)
 curl -s -o /dev/null -w "%{http_code}" https://katibu.my/projects/test
 # → 200
+
+# Check all container health statuses
+docker compose ps
 ```
 
 ### Useful operations
@@ -555,6 +575,36 @@ Managed by Flyway. Migration files in `backend/core/src/main/resources/db/migrat
 
 ---
 
+## CI / CD
+
+Defined in `.github/workflows/ci.yml`. Triggers on every push and pull request to `main`.
+
+### Pipeline stages
+
+| Stage | Trigger | What it does |
+|-------|---------|--------------|
+| `test-frontend` | push + PR | Installs Node 20, runs `npm run test:unit -- --ci --coverage`, uploads coverage artifact |
+| `test-backend` | push + PR | Starts a Postgres 15 service container, runs `mvn -B test` with real DB |
+| `build-push` | push to `main` only | Builds and pushes `frontend`, `core`, and `gateway` Docker images **in parallel** to GHCR |
+
+### Docker images
+
+Images are pushed to the GitHub Container Registry under `ghcr.io/<owner>/katibu-<service>` with two tags: `latest` and `sha-<commit-sha>`.
+
+### Running frontend tests locally
+
+```bash
+cd frontend
+npm install --legacy-peer-deps
+npm run test:unit
+# With coverage:
+npm run test:unit -- --coverage
+```
+
+The test suite uses `vue-cli-service test:unit` which bundles jest 27 (compatible with `jest-environment-jsdom@27`). Do not invoke `jest` directly as it picks up the standalone `jest@29` entry and causes environment version mismatches.
+
+---
+
 ## Postman Collection
 
 Located at `postman/Katibu.postman_collection.json`. Import into Postman.
@@ -576,3 +626,7 @@ All tests assert HTTP status, response time < 500ms, and data correctness.
 - **Soft deletes**: Ledger entries are never hard-deleted — `deleted_at` timestamp is set instead. This maintains a full audit trail per cash-based accounting requirements.
 - **No accruals**: All calculations are strictly cash-based. An entry only exists if cash was received or paid.
 - **Public links**: Tokens are stored in the database and validated on every request. Revocation is immediate. Optional expiry is checked server-side.
+- **Health probes**: Both core and gateway include `spring-boot-starter-actuator`. Only the `/actuator/health` endpoint is exposed (`show-details: never`). Docker Compose healthchecks hit this endpoint on each container's local port. The endpoint is permitted without authentication in `SecurityConfig`.
+- **Frontend logo**: All logo instances in the Vue frontend (`NavBar`, `AppFooter`, auth pages, public report view) use the actual logo files from `frontend/src/assets/images/` via `<img>` tags processed by webpack — `high-resolution-color-logo.png` for light backgrounds, `high-resolution-logo-grayscale.png` for the dark footer.
+- **Toast notifications**: All user-facing feedback (success, error, warning, info) goes through the `$toast` plugin (`frontend/src/plugins/toast.js`). Toasts appear top-right, auto-dismiss after 5 seconds, and are colour-coded by type. The `AppToast` component reads from a `Vue.observable` singleton — no event bus required.
+- **API envelope**: All Spring REST endpoints return `{ "success": true|false, "data": T, "message": "..." }`. The Axios response interceptor in `frontend/src/api/index.js` automatically unwraps the envelope so callers receive `body.data` directly.

@@ -53,5 +53,7 @@ management:
 
 logging:
   level:
-    com.katibu: INFO
-    org.springframework.security: WARN
+    com.katibu: DEBUG
+    org.springframework.security: INFO
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver: DEBUG

@@ -143,6 +143,7 @@ export default {
         await api.projects.create(payload)
         this.showCreate = false
         this.form = { name: '', description: '', durationType: '', startDate: '', endDate: '' }
+        this.$toast.success('Project created successfully')
         await this.load()
       } catch (e) {
         this.createError = e?.message || 'Failed to create project.'

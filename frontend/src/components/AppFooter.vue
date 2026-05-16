@@ -6,13 +6,7 @@
         <!-- Brand column -->
         <div class="footer-brand">
           <div class="footer-logo">
-            <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
-              <circle cx="18" cy="18" r="18" fill="#74C69D" opacity="0.25"/>
-              <path d="M18 9C18 9 26 11.5 27 18C28 24.5 18 27 18 27C18 27 8 24.5 9 18C10 11.5 18 9 18 9Z" fill="#74C69D" opacity="0.5"/>
-              <line x1="18" y1="14" x2="18" y2="27" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-              <line x1="18" y1="19" x2="13" y2="15.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-              <line x1="18" y1="23" x2="23" y2="19.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
+            <img class="footer-logo-img" src="@/assets/images/high-resolution-logo-grayscale.png" alt="Katibu"/>
             <span class="footer-logo-text">Katibu</span>
           </div>
           <p class="footer-tagline">
@@ -92,6 +86,7 @@ export default {
 
 /* Brand */
 .footer-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.footer-logo-img { width: 32px; height: 32px; object-fit: contain; }
 .footer-logo-text {
   font-family: 'Playfair Display', serif;
   font-size: 1.4rem; font-weight: 700; color: var(--white);

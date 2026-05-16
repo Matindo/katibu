@@ -26,7 +26,7 @@ public class LedgerController {
     public ApiResponse<LedgerEntryResponse> create(@PathVariable UUID projectId,
                                                    @Valid @RequestBody CreateEntryRequest req,
                                                    Authentication auth) {
-        return ApiResponse.ok(ledgerService.create(projectId, req, auth.getName()));
+        return ApiResponse.ok(ledgerService.create(projectId, req, auth.getName()), "Transaction recorded");
     }
 
     @GetMapping
@@ -46,7 +46,7 @@ public class LedgerController {
                                                    @PathVariable UUID entryId,
                                                    @Valid @RequestBody UpdateEntryRequest req,
                                                    Authentication auth) {
-        return ApiResponse.ok(ledgerService.update(projectId, entryId, req, auth.getName()));
+        return ApiResponse.ok(ledgerService.update(projectId, entryId, req, auth.getName()), "Transaction updated");
     }
 
     @DeleteMapping("/{entryId}")

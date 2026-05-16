@@ -7,20 +7,38 @@ const api = axios.create({
 
 api.interceptors.request.use(config => {
   const token = store.state.token
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
 api.interceptors.response.use(
-  response => response.data,
+  response => {
+    // 204 No Content (deletes)
+    if (response.status === 204) return null
+    const body = response.data
+    // Unwrap ApiResponse envelope: return inner data, keep message accessible via promise chain
+    if (body && typeof body === 'object' && 'success' in body) {
+      // Attach message as a non-enumerable property so callers can read it if needed
+      const result = body.data != null ? body.data : null
+      if (result !== null && typeof result === 'object') {
+        Object.defineProperty(result, '_message', { value: body.message, enumerable: false, writable: true })
+      }
+      return result
+    }
+    return body
+  },
   error => {
-    if (error.response && error.response.status === 401) {
+    if (error.response?.status === 401) {
       store.dispatch('logout')
       window.location.href = '/login'
+      return Promise.reject(new Error('Session expired. Please log in again.'))
     }
-    return Promise.reject(error.response ? error.response.data : error)
+    if (error.response?.data) {
+      const body = error.response.data
+      const msg = (body && typeof body === 'object' && body.message) ? body.message : 'An unexpected error occurred'
+      return Promise.reject(new Error(msg))
+    }
+    return Promise.reject(new Error('Network error. Please check your connection.'))
   }
 )
 

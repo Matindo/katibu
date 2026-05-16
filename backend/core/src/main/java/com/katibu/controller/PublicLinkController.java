@@ -24,7 +24,7 @@ public class PublicLinkController {
     public ApiResponse<PublicLinkResponse> generate(@PathVariable UUID projectId,
                                                     @RequestBody(required = false) GenerateLinkRequest req,
                                                     Authentication auth) {
-        return ApiResponse.ok(publicLinkService.generate(projectId, req, auth.getName()));
+        return ApiResponse.ok(publicLinkService.generate(projectId, req, auth.getName()), "Public link generated");
     }
 
     @GetMapping

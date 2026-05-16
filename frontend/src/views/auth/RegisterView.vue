@@ -6,13 +6,7 @@
     <div class="auth-card glass">
       <div class="auth-logo">
         <router-link to="/" class="auth-brand">
-          <svg width="40" height="40" viewBox="0 0 36 36" fill="none">
-            <circle cx="18" cy="18" r="18" fill="#2D6A4F"/>
-            <path d="M18 9C18 9 26 11.5 27 18C28 24.5 18 27 18 27C18 27 8 24.5 9 18C10 11.5 18 9 18 9Z" fill="#74C69D" opacity="0.7"/>
-            <line x1="18" y1="14" x2="18" y2="27" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-            <line x1="18" y1="19" x2="13" y2="15.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-            <line x1="18" y1="23" x2="23" y2="19.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
+          <img class="auth-brand-logo" src="@/assets/images/high-resolution-color-logo.png" alt="Katibu"/>
           <span>Katibu</span>
         </router-link>
       </div>
@@ -78,7 +72,7 @@ export default {
       this.loading = true
       try {
         const res = await api.auth.register({ fullName: this.form.fullName, email: this.form.email, password: this.form.password })
-        this.$store.dispatch('login', { token: res.data.token, user: { email: res.data.email, fullName: res.data.fullName, id: res.data.id } })
+        this.$store.dispatch('login', { token: res.token, user: { email: res.email, fullName: res.fullName, id: res.userId } })
         this.$router.push('/projects')
       } catch (e) {
         this.error = e?.message || 'Registration failed. Please try again.'
@@ -107,6 +101,7 @@ export default {
 }
 .auth-logo { text-align: center; margin-bottom: 24px; }
 .auth-brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+.auth-brand-logo { width: 40px; height: 40px; object-fit: contain; }
 .auth-brand span { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--green-deep); }
 
 .auth-card h2 { text-align: center; font-size: 1.6rem; margin-bottom: 8px; }
