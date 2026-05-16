@@ -1,0 +1,869 @@
+{
+  "info": {
+    "name": "Katibu API",
+    "_postman_id": "katibu-api-collection-v1",
+    "description": "Katibu Financial Management Platform API. All protected endpoints require Bearer token. Set {{base_url}} to http://localhost:8080 for local dev.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080", "type": "string" },
+    { "key": "auth_token", "value": "", "type": "string" },
+    { "key": "project_id", "value": "", "type": "string" },
+    { "key": "entry_id", "value": "", "type": "string" },
+    { "key": "member_user_id", "value": "", "type": "string" },
+    { "key": "link_id", "value": "", "type": "string" },
+    { "key": "public_token", "value": "", "type": "string" },
+    { "key": "file_id", "value": "", "type": "string" },
+    { "key": "report_start", "value": "2024-01-01", "type": "string" },
+    { "key": "report_end", "value": "2024-12-31", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@katibu.test\",\n  \"password\": \"Password123\",\n  \"fullName\": \"Test Admin\"\n}"
+            },
+            "description": "Register a new user account."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Returns token', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data).to.have.property('token');",
+                  "  pm.collectionVariables.set('auth_token', json.data.token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@katibu.test\",\n  \"password\": \"Password123\"\n}"
+            },
+            "description": "Authenticate and receive a JWT token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Returns valid auth data', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.token).to.be.a('string');",
+                  "  pm.expect(json.data.email).to.be.a('string');",
+                  "  pm.collectionVariables.set('auth_token', json.data.token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/projects", "host": ["{{base_url}}"], "path": ["api","projects"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Q1 2024 Operations\",\n  \"description\": \"Operational budget for Q1 2024\",\n  \"durationType\": \"QUARTERLY\",\n  \"startDate\": \"2024-01-01\"\n}"
+            },
+            "description": "Create a new project ledger. For CUSTOM durationType, provide endDate. For fixed types (WEEKLY, MONTHLY, QUARTERLY, HALF_YEARLY, YEARLY), endDate is auto-calculated."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Project created with correct fields', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.id).to.be.a('string');",
+                  "  pm.expect(json.data.status).to.equal('ACTIVE');",
+                  "  pm.collectionVariables.set('project_id', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List My Projects",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects", "host": ["{{base_url}}"], "path": ["api","projects"] },
+            "description": "List all projects where the authenticated user is creator or admin member."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Returns array', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Project",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}"] },
+            "description": "Get a single project by ID."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Project has required fields', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.all.keys('id','name','durationType','startDate','endDate','status','creatorId');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Q1 2024 Operations (Updated)\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "description": "Update project name and description. Only accessible to creator and admin members."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Name updated', () => pm.expect(pm.response.json().data.name).to.include('Updated'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Archive Project",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/archive", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","archive"] },
+            "description": "Archive a project. Only the project creator can archive. Archived projects are read-only."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Status is ARCHIVED', () => pm.expect(pm.response.json().data.status).to.equal('ARCHIVED'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Members",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/members", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","members"] },
+            "description": "List all admin members of a project (excludes creator)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Returns array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/members", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","members"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"member@katibu.test\"\n}"
+            },
+            "description": "Add a registered user as an admin member. Only the project creator can do this."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Member added', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.role).to.equal('ADMIN');",
+                  "  pm.collectionVariables.set('member_user_id', d.userId);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove Member",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/members/{{member_user_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","members","{{member_user_id}}"] },
+            "description": "Remove an admin member from a project. Only the creator can remove members."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ledger Entries",
+      "item": [
+        {
+          "name": "Create Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/entries", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","entries"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entryType\": \"INITIAL_CAPITAL\",\n  \"amount\": 500000.00,\n  \"description\": \"Initial funding from organization\",\n  \"reference\": \"REF-001\",\n  \"transactionDate\": \"2024-01-01\"\n}"
+            },
+            "description": "Add a ledger entry. Entry types: INITIAL_CAPITAL, DONATION, REVENUE, GRANT, LOAN_RECEIVED, CREDIT (inflows); PURCHASE, EXPENDITURE, LOAN_REPAYMENT, DEBT_PAYMENT, WITHDRAWAL (outflows)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Entry created', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.id).to.be.a('string');",
+                  "  pm.expect(d.inflow).to.be.a('boolean');",
+                  "  pm.collectionVariables.set('entry_id', d.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Entries",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/entries", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","entries"] },
+            "description": "List all non-deleted ledger entries for a project, ordered by transaction date descending."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Returns array of entries', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Entry",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/entries/{{entry_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","entries","{{entry_id}}"] },
+            "description": "Get a specific ledger entry."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Entry has required fields', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.all.keys('id','projectId','entryType','inflow','amount','description','transactionDate','recordedAt');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Entry",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/entries/{{entry_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","entries","{{entry_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entryType\": \"INITIAL_CAPITAL\",\n  \"amount\": 600000.00,\n  \"description\": \"Initial funding (corrected amount)\",\n  \"reference\": \"REF-001\",\n  \"transactionDate\": \"2024-01-01\"\n}"
+            },
+            "description": "Update an existing ledger entry. Not allowed for archived projects."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Amount updated', () => pm.expect(pm.response.json().data.amount).to.equal(600000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/entries/{{entry_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","entries","{{entry_id}}"] },
+            "description": "Soft-delete a ledger entry. The record is retained in the database for audit purposes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Summary Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/reports/summary?startDate={{report_start}}&endDate={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","projects","{{project_id}}","reports","summary"],
+              "query": [
+                { "key": "startDate", "value": "{{report_start}}" },
+                { "key": "endDate", "value": "{{report_end}}" }
+              ]
+            },
+            "description": "Get a summary of total receipts, payments, and closing balance for the period."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Closing balance = opening + net', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  const expected = parseFloat(d.openingBalance) + parseFloat(d.netCashFlow);",
+                  "  pm.expect(parseFloat(d.closingBalance)).to.be.closeTo(expected, 0.01);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Receipts and Payments (IPSAS 2)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/reports/receipts-payments?startDate={{report_start}}&endDate={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","projects","{{project_id}}","reports","receipts-payments"],
+              "query": [
+                { "key": "startDate", "value": "{{report_start}}" },
+                { "key": "endDate", "value": "{{report_end}}" }
+              ]
+            },
+            "description": "Statement of Receipts and Payments per IPSAS 2 (cash basis). Groups all inflows as Receipts and outflows as Payments by type."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Report structure valid', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.receipts).to.be.an('array');",
+                  "  pm.expect(d.payments).to.be.an('array');",
+                  "  pm.expect(d).to.have.property('closingBalance');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cash Flow Statement (IFRS)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/reports/cash-flow?startDate={{report_start}}&endDate={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","projects","{{project_id}}","reports","cash-flow"],
+              "query": [
+                { "key": "startDate", "value": "{{report_start}}" },
+                { "key": "endDate", "value": "{{report_end}}" }
+              ]
+            },
+            "description": "IFRS-aligned Cash Flow Statement categorised into Operating, Investing, and Financing activities."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Three activity categories present', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property('operatingActivities');",
+                  "  pm.expect(d).to.have.property('investingActivities');",
+                  "  pm.expect(d).to.have.property('financingActivities');",
+                  "});",
+                  "pm.test('Net cash flow = operating + investing + financing', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  const sum = parseFloat(d.netOperating) + parseFloat(d.netInvesting) + parseFloat(d.netFinancing);",
+                  "  pm.expect(parseFloat(d.netCashFlow)).to.be.closeTo(sum, 0.01);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Financial Position",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/reports/financial-position?asAt={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","projects","{{project_id}}","reports","financial-position"],
+              "query": [{ "key": "asAt", "value": "{{report_end}}" }]
+            },
+            "description": "Statement of Financial Position (balance sheet equivalent) as at a specific date. Shows assets (cash), liabilities (loans/debts), and net assets."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Net assets = assets - liabilities', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  const expected = parseFloat(d.totalAssets) - parseFloat(d.totalLiabilities);",
+                  "  pm.expect(parseFloat(d.netAssets)).to.be.closeTo(expected, 0.01);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Public Links",
+      "item": [
+        {
+          "name": "Generate Public Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/links", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","links"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expiresAt\": null\n}"
+            },
+            "description": "Generate a shareable public link for this project's reports. Optional expiresAt (ISO 8601 datetime). The link does not require authentication."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Link generated', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.token).to.be.a('string');",
+                  "  pm.expect(d.url).to.include('/api/public/');",
+                  "  pm.collectionVariables.set('public_token', d.token);",
+                  "  pm.collectionVariables.set('link_id', d.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Public Links",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/links", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","links"] },
+            "description": "List all public links for a project, including revoked ones."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Returns array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revoke Public Link",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/links/{{link_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","links","{{link_id}}"] },
+            "description": "Revoke (deactivate) a public link. It will no longer be accessible."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Public Access (No Auth)",
+      "item": [
+        {
+          "name": "Public Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/public/{{public_token}}/summary?startDate={{report_start}}&endDate={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","public","{{public_token}}","summary"],
+              "query": [
+                { "key": "startDate", "value": "{{report_start}}" },
+                { "key": "endDate", "value": "{{report_end}}" }
+              ]
+            },
+            "description": "Access summary report via a public token. No authentication required."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Report returned', () => pm.expect(pm.response.json().success).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Public Receipts and Payments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/public/{{public_token}}/receipts-payments?startDate={{report_start}}&endDate={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","public","{{public_token}}","receipts-payments"],
+              "query": [
+                { "key": "startDate", "value": "{{report_start}}" },
+                { "key": "endDate", "value": "{{report_end}}" }
+              ]
+            },
+            "description": "Access receipts and payments report via public token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Public Cash Flow",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/public/{{public_token}}/cash-flow?startDate={{report_start}}&endDate={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","public","{{public_token}}","cash-flow"],
+              "query": [
+                { "key": "startDate", "value": "{{report_start}}" },
+                { "key": "endDate", "value": "{{report_end}}" }
+              ]
+            },
+            "description": "Access cash flow statement via public token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Public Financial Position",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/public/{{public_token}}/financial-position?asAt={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","public","{{public_token}}","financial-position"],
+              "query": [{ "key": "asAt", "value": "{{report_end}}" }]
+            },
+            "description": "Access financial position report via public token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "File Exports",
+      "item": [
+        {
+          "name": "Export PDF Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/files/export", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","files","export"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileType\": \"PDF\",\n  \"reportType\": \"RECEIPTS_PAYMENTS\",\n  \"startDate\": \"{{report_start}}\",\n  \"endDate\": \"{{report_end}}\"\n}"
+            },
+            "description": "Generate and store a PDF report. reportType options: SUMMARY, RECEIPTS_PAYMENTS, CASH_FLOW, FINANCIAL_POSITION, LEDGER. fileType: PDF or CSV."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('File metadata returned', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.id).to.be.a('string');",
+                  "  pm.expect(d.fileType).to.equal('PDF');",
+                  "  pm.collectionVariables.set('file_id', d.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Export CSV Ledger",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/files/export", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","files","export"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileType\": \"CSV\",\n  \"reportType\": \"LEDGER\",\n  \"startDate\": \"{{report_start}}\",\n  \"endDate\": \"{{report_end}}\"\n}"
+            },
+            "description": "Export full ledger as CSV."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('File is CSV', () => pm.expect(pm.response.json().data.fileType).to.equal('CSV'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Generated Files",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/files", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","files"] },
+            "description": "List all generated files for a project."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Returns array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download File",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/files/{{file_id}}/download", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","files","{{file_id}}","download"] },
+            "description": "Download a generated file. Response is the raw file (PDF or CSV) with Content-Disposition attachment header."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Content-Disposition present', () => pm.expect(pm.response.headers.get('Content-Disposition')).to.include('attachment'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
