@@ -9,7 +9,10 @@
       "Bash(docker run *)",
       "Bash(curl -si http://localhost:3000/)",
       "Bash(docker stop *)",
-      "Bash(curl -si http://localhost:3000/projects/123)"
+      "Bash(curl -si http://localhost:3000/projects/123)",
+      "Bash(python3 -c ' *)",
+      "Bash(npm run *)",
+      "Bash(python3 *)"
     ]
   }
 }
