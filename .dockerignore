@@ -1,0 +1,17 @@
+.git
+.gitignore
+.idea
+.claude
+.env
+.env.*
+!.env.example
+
+# Never copy pre-built artifacts — Docker builds from source.
+**/target/
+
+# Not needed in build context.
+frontend/
+postman/
+nginx/
+*.md
+LICENSE

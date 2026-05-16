@@ -1,0 +1,104 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: katibu-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-katibu}
+      POSTGRES_USER: ${DB_USERNAME:-katibu}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - katibu-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-katibu} -d ${DB_NAME:-katibu}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: katibu-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+    networks:
+      - katibu-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  core:
+    build:
+      context: .
+      dockerfile: backend/core/Dockerfile
+    container_name: katibu-core
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-katibu}
+      DB_USERNAME: ${DB_USERNAME:-katibu}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET:-katibu-files}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://api.katibu.my}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - katibu-net
+    restart: unless-stopped
+    healthcheck:
+      # curl returns 0 as long as the server responds, regardless of HTTP status code.
+      # A 400 from the auth endpoint means Spring Boot is up.
+      test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://localhost:8081/api/auth/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  gateway:
+    build:
+      context: .
+      dockerfile: backend/gateway/Dockerfile
+    container_name: katibu-gateway
+    # Bind to loopback only — nginx on the host proxies to this port.
+    # Nothing on the internet reaches the gateway directly.
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      CORE_SERVICE_URL: http://core:8081
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://katibu.my,https://www.katibu.my}
+    depends_on:
+      core:
+        condition: service_healthy
+    networks:
+      - katibu-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://localhost:8080/api/auth/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  katibu-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:

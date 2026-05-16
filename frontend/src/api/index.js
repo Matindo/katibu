@@ -2,7 +2,7 @@ import axios from 'axios'
 import store from '../store'
 
 const api = axios.create({
-  baseURL: process.env.VUE_APP_API_URL || 'http://localhost:8080/api'
+  baseURL: process.env.VUE_APP_API_URL || 'http://localhost:8080'
 })
 
 api.interceptors.request.use(config => {

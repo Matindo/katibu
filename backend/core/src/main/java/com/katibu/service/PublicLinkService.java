@@ -71,7 +71,7 @@ public class PublicLinkService {
     }
 
     private PublicLinkResponse toResponse(PublicLink link) {
-        String url = publicBaseUrl + "/api/public/" + link.getToken();
+        String url = publicBaseUrl + "/public/" + link.getToken();
         return new PublicLinkResponse(link.getId(), link.getToken(), url,
                 link.getExpiresAt(), link.isActive(), link.getCreatedAt());
     }

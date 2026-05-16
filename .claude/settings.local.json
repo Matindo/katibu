@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git -C \"E:/Work/katibu\" log --oneline)"
+      "Bash(git -C \"E:/Work/katibu\" log --oneline)",
+      "PowerShell(New-Item *)"
     ]
   }
 }

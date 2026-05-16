@@ -12,7 +12,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/projects/{projectId}/reports")
+@RequestMapping("/projects/{projectId}/reports")
 @RequiredArgsConstructor
 public class ReportController {
 

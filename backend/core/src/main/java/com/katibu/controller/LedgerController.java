@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/projects/{projectId}/entries")
+@RequestMapping("/projects/{projectId}/entries")
 @RequiredArgsConstructor
 public class LedgerController {
 

@@ -17,6 +17,7 @@ A localised financial records, accountability, and reporting platform for users,
 - **File Exports** — Download reports as PDF or CSV. Files are stored in MinIO.
 - **Project Archiving** — Completed projects can be archived (read-only). Reports remain accessible.
 - **Role-based Access** — Creator has full control. Added admins can record entries and generate reports/links.
+- **PWA** — Installable on any device from the browser. Works offline for already-loaded views.
 
 ---
 
@@ -31,7 +32,7 @@ A localised financial records, accountability, and reporting platform for users,
 | PDF        | Apache PDFBox 3.x                                  |
 | CSV        | Apache Commons CSV 1.11                            |
 | Auth       | JWT (JJWT 0.12.x) + Spring Security               |
-| Frontend   | Vue.js 2 (Options API), Vuex, Vue Router (scaffold)|
+| Frontend   | Vue.js 2 (Options API), Vuex, Vue Router (PWA)     |
 
 ---
 
@@ -116,13 +117,13 @@ katibu/
 │   │       │   │   │   ├── FileExportService.java    # PDF/CSV generation + MinIO storage
 │   │       │   │   │   └── MinioService.java         # upload/download
 │   │       │   │   └── controller/
-│   │       │   │       ├── AuthController.java        # POST /api/auth/register|login
-│   │       │   │       ├── ProjectController.java     # /api/projects/**
-│   │       │   │       ├── LedgerController.java      # /api/projects/{id}/entries/**
-│   │       │   │       ├── ReportController.java      # /api/projects/{id}/reports/**
-│   │       │   │       ├── PublicLinkController.java  # /api/projects/{id}/links/**
-│   │       │   │       ├── PublicController.java      # /api/public/{token}/** (no auth)
-│   │       │   │       └── FileController.java        # /api/projects/{id}/files/**
+│   │       │   │       ├── AuthController.java        # POST /auth/register|login
+│   │       │   │       ├── ProjectController.java     # /projects/**
+│   │       │   │       ├── LedgerController.java      # /projects/{id}/entries/**
+│   │       │   │       ├── ReportController.java      # /projects/{id}/reports/**
+│   │       │   │       ├── PublicLinkController.java  # /projects/{id}/links/**
+│   │       │   │       ├── PublicController.java      # /public/{token}/** (no auth)
+│   │       │   │       └── FileController.java        # /projects/{id}/files/**
 │   │       │   └── resources/
 │   │       │       ├── application.yml
 │   │       │       └── db/migration/
@@ -137,16 +138,21 @@ katibu/
 │           │   ├── java/com/katibu/gateway/
 │           │   │   └── GatewayApplication.java
 │           │   └── resources/
-│           │       └── application.yml   # routes all /api/** → core on 8081
+│           │       └── application.yml   # routes all /** → core on 8081
 │           └── test/java/com/katibu/gateway/
 │               └── GatewayApplicationTests.java
 │
-├── frontend/                         # Vue.js 2 scaffolding (Options API, no Vite)
+├── frontend/                         # Vue.js 2 PWA (Options API, no Vite)
 │   ├── package.json
-│   ├── index.html
+│   ├── vue.config.js                 # PWA plugin config (name, icons, workbox)
 │   ├── jest.config.js
+│   ├── public/
+│   │   ├── index.html                # PWA meta tags, manifest link
+│   │   ├── favicon.ico
+│   │   └── img/icons/               # PWA icons (see ICONS.md inside)
 │   └── src/
 │       ├── main.js
+│       ├── registerServiceWorker.js  # Workbox service worker registration
 │       ├── App.vue
 │       ├── api/
 │       │   └── index.js              # Axios client with JWT interceptor
@@ -162,6 +168,10 @@ katibu/
 │       │   └── public/               # PublicReportView
 │       └── components/               # Shared components (to be built)
 │
+├── nginx/
+│   ├── api.katibu.my.conf            # NPM reference (proxy host settings)
+│   └── katibu.my.conf               # NPM reference (includes SPA routing snippet)
+│
 └── postman/
     └── Katibu.postman_collection.json  # Full API collection with tests
 ```
@@ -174,36 +184,36 @@ All responses follow the envelope: `{ "success": true|false, "data": {...}, "mes
 
 ### Authentication
 
-| Method | Path                  | Auth | Description            |
-|--------|-----------------------|------|------------------------|
-| POST   | `/api/auth/register`  | No   | Register a new account |
-| POST   | `/api/auth/login`     | No   | Login, receive JWT     |
+| Method | Path               | Auth | Description            |
+|--------|--------------------|------|------------------------|
+| POST   | `/auth/register`   | No   | Register a new account |
+| POST   | `/auth/login`      | No   | Login, receive JWT     |
 
 ### Projects
 
-| Method | Path                                     | Auth    | Who       | Description                   |
-|--------|------------------------------------------|---------|-----------|-------------------------------|
-| POST   | `/api/projects`                          | Bearer  | Any user  | Create a project              |
-| GET    | `/api/projects`                          | Bearer  | Any user  | List accessible projects      |
-| GET    | `/api/projects/{id}`                     | Bearer  | Member+   | Get project details           |
-| PUT    | `/api/projects/{id}`                     | Bearer  | Member+   | Update name/description       |
-| POST   | `/api/projects/{id}/archive`             | Bearer  | Creator   | Archive the project           |
-| GET    | `/api/projects/{id}/members`             | Bearer  | Member+   | List admin members            |
-| POST   | `/api/projects/{id}/members`             | Bearer  | Creator   | Add admin member by email     |
-| DELETE | `/api/projects/{id}/members/{userId}`    | Bearer  | Creator   | Remove admin member           |
+| Method | Path                                  | Auth    | Who       | Description                   |
+|--------|---------------------------------------|---------|-----------|-------------------------------|
+| POST   | `/projects`                           | Bearer  | Any user  | Create a project              |
+| GET    | `/projects`                           | Bearer  | Any user  | List accessible projects      |
+| GET    | `/projects/{id}`                      | Bearer  | Member+   | Get project details           |
+| PUT    | `/projects/{id}`                      | Bearer  | Member+   | Update name/description       |
+| POST   | `/projects/{id}/archive`              | Bearer  | Creator   | Archive the project           |
+| GET    | `/projects/{id}/members`              | Bearer  | Member+   | List admin members            |
+| POST   | `/projects/{id}/members`              | Bearer  | Creator   | Add admin member by email     |
+| DELETE | `/projects/{id}/members/{userId}`     | Bearer  | Creator   | Remove admin member           |
 
 **Duration types:** `WEEKLY`, `MONTHLY`, `QUARTERLY`, `HALF_YEARLY`, `YEARLY`, `CUSTOM`  
 For fixed types, `endDate` is auto-calculated. `CUSTOM` requires explicit `endDate`.
 
 ### Ledger Entries
 
-| Method | Path                                              | Auth   | Description                     |
-|--------|---------------------------------------------------|--------|---------------------------------|
-| POST   | `/api/projects/{id}/entries`                      | Bearer | Add ledger entry                |
-| GET    | `/api/projects/{id}/entries`                      | Bearer | List entries (date desc)        |
-| GET    | `/api/projects/{id}/entries/{entryId}`            | Bearer | Get single entry                |
-| PUT    | `/api/projects/{id}/entries/{entryId}`            | Bearer | Update entry                    |
-| DELETE | `/api/projects/{id}/entries/{entryId}`            | Bearer | Soft-delete entry               |
+| Method | Path                                           | Auth   | Description                     |
+|--------|------------------------------------------------|--------|---------------------------------|
+| POST   | `/projects/{id}/entries`                       | Bearer | Add ledger entry                |
+| GET    | `/projects/{id}/entries`                       | Bearer | List entries (date desc)        |
+| GET    | `/projects/{id}/entries/{entryId}`             | Bearer | Get single entry                |
+| PUT    | `/projects/{id}/entries/{entryId}`             | Bearer | Update entry                    |
+| DELETE | `/projects/{id}/entries/{entryId}`             | Bearer | Soft-delete entry               |
 
 **Entry types:**
 
@@ -226,37 +236,37 @@ For fixed types, `endDate` is auto-calculated. `CUSTOM` requires explicit `endDa
 All report endpoints require `startDate` and `endDate` query params (ISO date: `YYYY-MM-DD`).  
 Financial Position uses `asAt` (single date).
 
-| Method | Path                                                 | Description                            |
-|--------|------------------------------------------------------|----------------------------------------|
-| GET    | `/api/projects/{id}/reports/summary`                 | Summary: totals, opening/closing       |
-| GET    | `/api/projects/{id}/reports/receipts-payments`       | IPSAS 2: receipts and payments by type |
-| GET    | `/api/projects/{id}/reports/cash-flow`               | IFRS: operating/investing/financing    |
-| GET    | `/api/projects/{id}/reports/financial-position`      | Balance sheet equivalent (`?asAt=`)    |
+| Method | Path                                            | Description                            |
+|--------|-------------------------------------------------|----------------------------------------|
+| GET    | `/projects/{id}/reports/summary`                | Summary: totals, opening/closing       |
+| GET    | `/projects/{id}/reports/receipts-payments`      | IPSAS 2: receipts and payments by type |
+| GET    | `/projects/{id}/reports/cash-flow`              | IFRS: operating/investing/financing    |
+| GET    | `/projects/{id}/reports/financial-position`     | Balance sheet equivalent (`?asAt=`)    |
 
 ### Public Links
 
-| Method | Path                                         | Auth   | Description          |
-|--------|----------------------------------------------|--------|----------------------|
-| POST   | `/api/projects/{id}/links`                   | Bearer | Generate public link |
-| GET    | `/api/projects/{id}/links`                   | Bearer | List links           |
-| DELETE | `/api/projects/{id}/links/{linkId}`          | Bearer | Revoke link          |
+| Method | Path                                  | Auth   | Description          |
+|--------|---------------------------------------|--------|----------------------|
+| POST   | `/projects/{id}/links`                | Bearer | Generate public link |
+| GET    | `/projects/{id}/links`                | Bearer | List links           |
+| DELETE | `/projects/{id}/links/{linkId}`       | Bearer | Revoke link          |
 
 ### Public Access (No Auth)
 
-| Method | Path                                              | Description                        |
-|--------|---------------------------------------------------|------------------------------------|
-| GET    | `/api/public/{token}/summary`                     | Public summary report              |
-| GET    | `/api/public/{token}/receipts-payments`           | Public receipts & payments report  |
-| GET    | `/api/public/{token}/cash-flow`                   | Public cash flow statement         |
-| GET    | `/api/public/{token}/financial-position`          | Public financial position          |
+| Method | Path                                         | Description                        |
+|--------|----------------------------------------------|------------------------------------|
+| GET    | `/public/{token}/summary`                    | Public summary report              |
+| GET    | `/public/{token}/receipts-payments`          | Public receipts & payments report  |
+| GET    | `/public/{token}/cash-flow`                  | Public cash flow statement         |
+| GET    | `/public/{token}/financial-position`         | Public financial position          |
 
 ### File Exports
 
-| Method | Path                                                  | Description                    |
-|--------|-------------------------------------------------------|--------------------------------|
-| POST   | `/api/projects/{id}/files/export`                     | Generate PDF or CSV report     |
-| GET    | `/api/projects/{id}/files`                            | List generated files           |
-| GET    | `/api/projects/{id}/files/{fileId}/download`          | Download file (binary)         |
+| Method | Path                                             | Description                    |
+|--------|--------------------------------------------------|--------------------------------|
+| POST   | `/projects/{id}/files/export`                    | Generate PDF or CSV report     |
+| GET    | `/projects/{id}/files`                           | List generated files           |
+| GET    | `/projects/{id}/files/{fileId}/download`         | Download file (binary)         |
 
 **Export request body:** `{ "fileType": "PDF"|"CSV", "reportType": "SUMMARY"|"RECEIPTS_PAYMENTS"|"CASH_FLOW"|"FINANCIAL_POSITION"|"LEDGER", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD" }`
 
@@ -303,26 +313,184 @@ mvn spring-boot:run
 ```bash
 cd backend/gateway
 mvn spring-boot:run
-# Starts on port 8080, proxies all /api/** to 8081
+# Starts on port 8080, proxies all requests to 8081
 ```
 
 All client requests go to **port 8080** (gateway).
 
 ### Environment Variables
 
-| Variable            | Default                            | Description                      |
-|---------------------|------------------------------------|----------------------------------|
-| `DB_URL`            | `jdbc:postgresql://localhost:5432/katibu` | PostgreSQL JDBC URL         |
-| `DB_USERNAME`       | `katibu`                           | Database user                    |
-| `DB_PASSWORD`       | `katibu`                           | Database password                |
-| `JWT_SECRET`        | *(dev default)*                    | **Change in production** (≥32 chars) |
-| `JWT_EXPIRATION_MS` | `86400000` (24h)                   | Token validity                   |
-| `MINIO_ENDPOINT`    | `http://localhost:9000`            | MinIO server URL                 |
-| `MINIO_ACCESS_KEY`  | `minioadmin`                       | MinIO access key                 |
-| `MINIO_SECRET_KEY`  | `minioadmin`                       | MinIO secret key                 |
-| `MINIO_BUCKET`      | `katibu-files`                     | MinIO bucket name (auto-created) |
-| `PUBLIC_BASE_URL`   | `http://localhost:8080`            | Base URL for public link URLs    |
-| `CORE_SERVICE_URL`  | `http://localhost:8081`            | Gateway → Core routing           |
+| Variable            | Default                                   | Description                          |
+|---------------------|-------------------------------------------|--------------------------------------|
+| `DB_URL`            | `jdbc:postgresql://localhost:5432/katibu` | PostgreSQL JDBC URL                  |
+| `DB_USERNAME`       | `katibu`                                  | Database user                        |
+| `DB_PASSWORD`       | `katibu`                                  | Database password                    |
+| `JWT_SECRET`        | *(dev default)*                           | **Change in production** (≥32 chars) |
+| `JWT_EXPIRATION_MS` | `86400000` (24h)                          | Token validity                       |
+| `MINIO_ENDPOINT`    | `http://localhost:9000`                   | MinIO server URL                     |
+| `MINIO_ACCESS_KEY`  | `minioadmin`                              | MinIO access key                     |
+| `MINIO_SECRET_KEY`  | `minioadmin`                              | MinIO secret key                     |
+| `MINIO_BUCKET`      | `katibu-files`                            | MinIO bucket name (auto-created)     |
+| `PUBLIC_BASE_URL`   | `http://localhost:8080`                   | Base URL embedded in public link URLs |
+| `CORE_SERVICE_URL`  | `http://localhost:8081`                   | Gateway → Core routing               |
+| `ALLOWED_ORIGINS`   | `*`                                       | Comma-separated CORS origins (gateway) |
+
+---
+
+## Deployment (Docker + VPS)
+
+### Production domains
+
+| Domain           | Purpose              |
+|------------------|----------------------|
+| `katibu.my`      | Frontend (Vue.js PWA)|
+| `api.katibu.my`  | API gateway          |
+
+### Architecture
+
+```
+Internet
+  │
+  ▼
+Nginx Proxy Manager (TLS termination)
+  ├── api.katibu.my  ──▶  127.0.0.1:8080  ──▶  [gateway container]
+  │                                                      │
+  │                                                      ▼
+  │                                            [core container :8081]
+  │                                            [postgres container]
+  │                                            [minio container]
+  │
+  └── katibu.my  ──▶  frontend dist (static files)
+```
+
+The gateway binds only to `127.0.0.1:8080`. Nothing inside Docker is directly reachable from the internet. Nginx Proxy Manager handles TLS and reverse proxying.
+
+### 1. VPS prerequisites
+
+```bash
+# Docker
+curl -fsSL https://get.docker.com | sh
+systemctl enable --now docker
+```
+
+Nginx Proxy Manager (NPM) should already be running on your VPS. If not, see the NPM docs for its own Docker Compose setup.
+
+### 2. DNS
+
+Point both `api.katibu.my` and `katibu.my` A records to your VPS IP.
+
+### 3. Environment variables
+
+```bash
+cp .env.example .env
+# Edit .env with your real values
+nano .env
+```
+
+Generate a secure JWT secret:
+```bash
+openssl rand -hex 32
+```
+
+Key production values:
+```
+PUBLIC_BASE_URL=https://katibu.my
+ALLOWED_ORIGINS=https://katibu.my,https://www.katibu.my
+```
+
+### 4. Build and start all containers
+
+```bash
+docker compose up -d --build
+```
+
+Check that everything came up:
+```bash
+docker compose ps
+docker compose logs -f
+```
+
+### 5. Configure Nginx Proxy Manager
+
+**api.katibu.my** (proxy host):
+- Forward Hostname / IP: `127.0.0.1`
+- Forward Port: `8080`
+- Scheme: `http`
+- Enable SSL via Let's Encrypt in the SSL tab
+
+**katibu.my** (static site or proxy host pointing to wherever you serve `frontend/dist/`):
+- Enable SSL via Let's Encrypt in the SSL tab
+- In the **Advanced** tab, add this to the Custom Nginx Configuration field:
+
+```nginx
+location / {
+    try_files $uri $uri/ /index.html;
+}
+```
+
+This is required because Vue Router runs in history mode. Without it, any URL opened directly (e.g. `katibu.my/projects/123`) returns a 404 from the web server instead of letting Vue Router handle it client-side.
+
+### 6. Build and deploy the frontend
+
+```bash
+cd frontend
+npm install
+npm run build
+# Copy frontend/dist/ to wherever katibu.my is served from
+```
+
+### 7. Verify
+
+```bash
+curl https://api.katibu.my/auth/login
+# → {"success":false,"message":"Invalid credentials"}  (server is up)
+```
+
+### Useful operations
+
+```bash
+# View logs for one service
+docker compose logs -f core
+
+# Restart a single service after config change
+docker compose restart gateway
+
+# Pull latest images and rebuild
+docker compose pull && docker compose up -d --build
+
+# Database backup
+docker exec katibu-postgres pg_dump -U katibu katibu > katibu_$(date +%Y%m%d).sql
+
+# MinIO console (access via SSH tunnel from your local machine)
+# ssh -L 9001:localhost:9001 user@your-vps  then open http://localhost:9001
+```
+
+---
+
+## PWA Setup
+
+The frontend is configured as a Progressive Web App. Users will see the browser's install prompt when visiting `katibu.my` on a supported device.
+
+**Requirements for install prompt:**
+- Site must be served over HTTPS (handled by NPM)
+- `manifest.json` must reference at least a 192×192 and a 512×512 icon
+- A service worker must be registered (handled by `registerServiceWorker.js`)
+
+**Icon files required** — place in `frontend/public/img/icons/`:
+
+| File | Size |
+|------|------|
+| `android-chrome-192x192.png` | 192×192 |
+| `android-chrome-512x512.png` | 512×512 |
+| `android-chrome-maskable-192x192.png` | 192×192 (maskable) |
+| `android-chrome-maskable-512x512.png` | 512×512 (maskable) |
+| `apple-touch-icon-152x152.png` | 152×152 |
+| `favicon-32x32.png` | 32×32 |
+| `favicon-16x16.png` | 16×16 |
+| `msapplication-icon-144x144.png` | 144×144 |
+| `mstile-150x150.png` | 150×150 |
+
+Also place `favicon.ico` in `frontend/public/`. Use a tool such as [realfavicongenerator.net](https://realfavicongenerator.net) with a 1024×1024 source image.
 
 ---
 
@@ -373,7 +541,8 @@ All tests assert HTTP status, response time < 500ms, and data correctness.
 ## Architecture Notes
 
 - **Monolith-first**: The single core service contains all business logic. The gateway is positioned now so the routing layer exists before microservice extraction begins.
-- **Gateway role**: Routes all `/api/**` to the core service. CORS is handled at the gateway. When services are split, only the gateway routing config changes.
+- **Gateway role**: Routes all requests to the core service. CORS and cross-origin policy are enforced exclusively at the gateway via `CorsWebFilter`. The allowed origins are controlled by the `ALLOWED_ORIGINS` env var (`*` in dev, `https://katibu.my` in production). When services are split, only the gateway routing config changes.
+- **TLS boundary**: Nginx Proxy Manager on the host terminates TLS. The gateway and core communicate over plain HTTP on the internal Docker network. The gateway is bound to `127.0.0.1:8080` and is not reachable from the internet directly.
 - **Soft deletes**: Ledger entries are never hard-deleted — `deleted_at` timestamp is set instead. This maintains a full audit trail per cash-based accounting requirements.
 - **No accruals**: All calculations are strictly cash-based. An entry only exists if cash was received or paid.
 - **Public links**: Tokens are stored in the database and validated on every request. Revocation is immediate. Optional expiry is checked server-side.

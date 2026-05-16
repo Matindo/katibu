@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/projects/{projectId}/links")
+@RequestMapping("/projects/{projectId}/links")
 @RequiredArgsConstructor
 public class PublicLinkController {
 

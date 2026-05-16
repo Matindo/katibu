@@ -26,7 +26,7 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth","register"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@katibu.test\",\n  \"password\": \"Password123\",\n  \"fullName\": \"Test Admin\"\n}"
@@ -56,7 +56,7 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth","login"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@katibu.test\",\n  \"password\": \"Password123\"\n}"
@@ -95,7 +95,7 @@
               { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{auth_token}}" }
             ],
-            "url": { "raw": "{{base_url}}/api/projects", "host": ["{{base_url}}"], "path": ["api","projects"] },
+            "url": { "raw": "{{base_url}}/projects", "host": ["{{base_url}}"], "path": ["projects"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Q1 2024 Operations\",\n  \"description\": \"Operational budget for Q1 2024\",\n  \"durationType\": \"QUARTERLY\",\n  \"startDate\": \"2024-01-01\"\n}"
@@ -126,7 +126,7 @@
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects", "host": ["{{base_url}}"], "path": ["api","projects"] },
+            "url": { "raw": "{{base_url}}/projects", "host": ["{{base_url}}"], "path": ["projects"] },
             "description": "List all projects where the authenticated user is creator or admin member."
           },
           "event": [
@@ -151,7 +151,7 @@
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}"] },
             "description": "Get a single project by ID."
           },
           "event": [
@@ -178,7 +178,7 @@
               { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{auth_token}}" }
             ],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Q1 2024 Operations (Updated)\",\n  \"description\": \"Updated description\"\n}"
@@ -203,7 +203,7 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/archive", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","archive"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/archive", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","archive"] },
             "description": "Archive a project. Only the project creator can archive. Archived projects are read-only."
           },
           "event": [
@@ -224,7 +224,7 @@
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/members", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","members"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/members", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","members"] },
             "description": "List all admin members of a project (excludes creator)."
           },
           "event": [
@@ -248,7 +248,7 @@
               { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{auth_token}}" }
             ],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/members", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","members"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/members", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","members"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"member@katibu.test\"\n}"
@@ -277,7 +277,7 @@
           "request": {
             "method": "DELETE",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/members/{{member_user_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","members","{{member_user_id}}"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/members/{{member_user_id}}", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","members","{{member_user_id}}"] },
             "description": "Remove an admin member from a project. Only the creator can remove members."
           },
           "event": [
@@ -305,7 +305,7 @@
               { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{auth_token}}" }
             ],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/entries", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","entries"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/entries", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","entries"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"entryType\": \"INITIAL_CAPITAL\",\n  \"amount\": 500000.00,\n  \"description\": \"Initial funding from organization\",\n  \"reference\": \"REF-001\",\n  \"transactionDate\": \"2024-01-01\"\n}"
@@ -335,7 +335,7 @@
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/entries", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","entries"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/entries", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","entries"] },
             "description": "List all non-deleted ledger entries for a project, ordered by transaction date descending."
           },
           "event": [
@@ -356,7 +356,7 @@
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/entries/{{entry_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","entries","{{entry_id}}"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/entries/{{entry_id}}", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","entries","{{entry_id}}"] },
             "description": "Get a specific ledger entry."
           },
           "event": [
@@ -383,7 +383,7 @@
               { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{auth_token}}" }
             ],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/entries/{{entry_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","entries","{{entry_id}}"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/entries/{{entry_id}}", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","entries","{{entry_id}}"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"entryType\": \"INITIAL_CAPITAL\",\n  \"amount\": 600000.00,\n  \"description\": \"Initial funding (corrected amount)\",\n  \"reference\": \"REF-001\",\n  \"transactionDate\": \"2024-01-01\"\n}"
@@ -408,7 +408,7 @@
           "request": {
             "method": "DELETE",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/entries/{{entry_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","entries","{{entry_id}}"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/entries/{{entry_id}}", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","entries","{{entry_id}}"] },
             "description": "Soft-delete a ledger entry. The record is retained in the database for audit purposes."
           },
           "event": [
@@ -434,9 +434,9 @@
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
             "url": {
-              "raw": "{{base_url}}/api/projects/{{project_id}}/reports/summary?startDate={{report_start}}&endDate={{report_end}}",
+              "raw": "{{base_url}}/projects/{{project_id}}/reports/summary?startDate={{report_start}}&endDate={{report_end}}",
               "host": ["{{base_url}}"],
-              "path": ["api","projects","{{project_id}}","reports","summary"],
+              "path": ["projects","{{project_id}}","reports","summary"],
               "query": [
                 { "key": "startDate", "value": "{{report_start}}" },
                 { "key": "endDate", "value": "{{report_end}}" }
@@ -467,9 +467,9 @@
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
             "url": {
-              "raw": "{{base_url}}/api/projects/{{project_id}}/reports/receipts-payments?startDate={{report_start}}&endDate={{report_end}}",
+              "raw": "{{base_url}}/projects/{{project_id}}/reports/receipts-payments?startDate={{report_start}}&endDate={{report_end}}",
               "host": ["{{base_url}}"],
-              "path": ["api","projects","{{project_id}}","reports","receipts-payments"],
+              "path": ["projects","{{project_id}}","reports","receipts-payments"],
               "query": [
                 { "key": "startDate", "value": "{{report_start}}" },
                 { "key": "endDate", "value": "{{report_end}}" }
@@ -501,9 +501,9 @@
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
             "url": {
-              "raw": "{{base_url}}/api/projects/{{project_id}}/reports/cash-flow?startDate={{report_start}}&endDate={{report_end}}",
+              "raw": "{{base_url}}/projects/{{project_id}}/reports/cash-flow?startDate={{report_start}}&endDate={{report_end}}",
               "host": ["{{base_url}}"],
-              "path": ["api","projects","{{project_id}}","reports","cash-flow"],
+              "path": ["projects","{{project_id}}","reports","cash-flow"],
               "query": [
                 { "key": "startDate", "value": "{{report_start}}" },
                 { "key": "endDate", "value": "{{report_end}}" }
@@ -540,9 +540,9 @@
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
             "url": {
-              "raw": "{{base_url}}/api/projects/{{project_id}}/reports/financial-position?asAt={{report_end}}",
+              "raw": "{{base_url}}/projects/{{project_id}}/reports/financial-position?asAt={{report_end}}",
               "host": ["{{base_url}}"],
-              "path": ["api","projects","{{project_id}}","reports","financial-position"],
+              "path": ["projects","{{project_id}}","reports","financial-position"],
               "query": [{ "key": "asAt", "value": "{{report_end}}" }]
             },
             "description": "Statement of Financial Position (balance sheet equivalent) as at a specific date. Shows assets (cash), liabilities (loans/debts), and net assets."
@@ -577,7 +577,7 @@
               { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{auth_token}}" }
             ],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/links", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","links"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/links", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","links"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"expiresAt\": null\n}"
@@ -594,7 +594,7 @@
                   "pm.test('Link generated', () => {",
                   "  const d = pm.response.json().data;",
                   "  pm.expect(d.token).to.be.a('string');",
-                  "  pm.expect(d.url).to.include('/api/public/');",
+                  "  pm.expect(d.url).to.include('/public/');",
                   "  pm.collectionVariables.set('public_token', d.token);",
                   "  pm.collectionVariables.set('link_id', d.id);",
                   "});"
@@ -608,7 +608,7 @@
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/links", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","links"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/links", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","links"] },
             "description": "List all public links for a project, including revoked ones."
           },
           "event": [
@@ -629,7 +629,7 @@
           "request": {
             "method": "DELETE",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/links/{{link_id}}", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","links","{{link_id}}"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/links/{{link_id}}", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","links","{{link_id}}"] },
             "description": "Revoke (deactivate) a public link. It will no longer be accessible."
           },
           "event": [
@@ -654,9 +654,9 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/api/public/{{public_token}}/summary?startDate={{report_start}}&endDate={{report_end}}",
+              "raw": "{{base_url}}/public/{{public_token}}/summary?startDate={{report_start}}&endDate={{report_end}}",
               "host": ["{{base_url}}"],
-              "path": ["api","public","{{public_token}}","summary"],
+              "path": ["public","{{public_token}}","summary"],
               "query": [
                 { "key": "startDate", "value": "{{report_start}}" },
                 { "key": "endDate", "value": "{{report_end}}" }
@@ -682,9 +682,9 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/api/public/{{public_token}}/receipts-payments?startDate={{report_start}}&endDate={{report_end}}",
+              "raw": "{{base_url}}/public/{{public_token}}/receipts-payments?startDate={{report_start}}&endDate={{report_end}}",
               "host": ["{{base_url}}"],
-              "path": ["api","public","{{public_token}}","receipts-payments"],
+              "path": ["public","{{public_token}}","receipts-payments"],
               "query": [
                 { "key": "startDate", "value": "{{report_start}}" },
                 { "key": "endDate", "value": "{{report_end}}" }
@@ -709,9 +709,9 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/api/public/{{public_token}}/cash-flow?startDate={{report_start}}&endDate={{report_end}}",
+              "raw": "{{base_url}}/public/{{public_token}}/cash-flow?startDate={{report_start}}&endDate={{report_end}}",
               "host": ["{{base_url}}"],
-              "path": ["api","public","{{public_token}}","cash-flow"],
+              "path": ["public","{{public_token}}","cash-flow"],
               "query": [
                 { "key": "startDate", "value": "{{report_start}}" },
                 { "key": "endDate", "value": "{{report_end}}" }
@@ -736,9 +736,9 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/api/public/{{public_token}}/financial-position?asAt={{report_end}}",
+              "raw": "{{base_url}}/public/{{public_token}}/financial-position?asAt={{report_end}}",
               "host": ["{{base_url}}"],
-              "path": ["api","public","{{public_token}}","financial-position"],
+              "path": ["public","{{public_token}}","financial-position"],
               "query": [{ "key": "asAt", "value": "{{report_end}}" }]
             },
             "description": "Access financial position report via public token."
@@ -768,7 +768,7 @@
               { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{auth_token}}" }
             ],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/files/export", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","files","export"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/files/export", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","files","export"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"fileType\": \"PDF\",\n  \"reportType\": \"RECEIPTS_PAYMENTS\",\n  \"startDate\": \"{{report_start}}\",\n  \"endDate\": \"{{report_end}}\"\n}"
@@ -801,7 +801,7 @@
               { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{auth_token}}" }
             ],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/files/export", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","files","export"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/files/export", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","files","export"] },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"fileType\": \"CSV\",\n  \"reportType\": \"LEDGER\",\n  \"startDate\": \"{{report_start}}\",\n  \"endDate\": \"{{report_end}}\"\n}"
@@ -826,7 +826,7 @@
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/files", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","files"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/files", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","files"] },
             "description": "List all generated files for a project."
           },
           "event": [
@@ -847,7 +847,7 @@
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
-            "url": { "raw": "{{base_url}}/api/projects/{{project_id}}/files/{{file_id}}/download", "host": ["{{base_url}}"], "path": ["api","projects","{{project_id}}","files","{{file_id}}","download"] },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/files/{{file_id}}/download", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","files","{{file_id}}","download"] },
             "description": "Download a generated file. Response is the raw file (PDF or CSV) with Content-Disposition attachment header."
           },
           "event": [

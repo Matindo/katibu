@@ -3,21 +3,19 @@ spring:
     name: katibu-gateway
   cloud:
     gateway:
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOriginPatterns: "*"
-            allowedMethods: ["GET","POST","PUT","DELETE","OPTIONS"]
-            allowedHeaders: "*"
-            allowCredentials: true
       routes:
         - id: core-service
           uri: ${CORE_SERVICE_URL:http://localhost:8081}
           predicates:
-            - Path=/api/**
+            - Path=/**
 
 server:
   port: ${GATEWAY_PORT:8080}
+
+app:
+  # Comma-separated list of allowed origins. Use * for development.
+  # Production: https://katibu.my,https://www.katibu.my
+  allowed-origins: ${ALLOWED_ORIGINS:*}
 
 logging:
   level:
