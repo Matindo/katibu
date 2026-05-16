@@ -17,6 +17,15 @@ app:
   # Production: https://katibu.my,https://www.katibu.my
   allowed-origins: ${ALLOWED_ORIGINS:*}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
 logging:
   level:
     org.springframework.cloud.gateway: INFO

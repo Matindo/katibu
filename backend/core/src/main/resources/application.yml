@@ -42,6 +42,15 @@ app:
 
   public-base-url: ${PUBLIC_BASE_URL:http://localhost:8080}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
 logging:
   level:
     com.katibu: INFO

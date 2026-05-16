@@ -24,7 +24,7 @@ WORKDIR /usr/share/nginx/html
 
 # Replace the default nginx config with ours (SPA routing + cache headers)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
+RUN apk add --no-cache curl
 COPY --from=builder /app/dist .
 
 EXPOSE 80

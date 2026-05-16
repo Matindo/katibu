@@ -12,7 +12,14 @@
       "Bash(curl -si http://localhost:3000/projects/123)",
       "Bash(python3 -c ' *)",
       "Bash(npm run *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(curl -s http://localhost:8081/actuator/health)",
+      "Bash(curl -s http://localhost:8080/actuator/health)",
+      "Bash(curl -so /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "Bash(curl -s -X POST http://localhost:8080/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"x\",\"password\":\"x\"}')",
+      "Bash(docker exec *)",
+      "Bash(curl -so /dev/null -w \"HTTP %{http_code}\" http://localhost:3000/)",
+      "Bash(curl -s -X POST http://localhost:8080/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"x\\\\\",\\\\\"password\\\\\":\\\\\"x\\\\\"}\")"
     ]
   }
 }

@@ -62,8 +62,7 @@ services:
       - katibu-net
     restart: unless-stopped
     healthcheck:
-      # A 400 from the auth endpoint means Spring Boot is up and responding.
-      test: ["CMD", "curl", "-sf", "-o", "/dev/null", "http://localhost:8081/auth/login"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8081/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -87,7 +86,7 @@ services:
       - katibu-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-sf", "-o", "/dev/null", "http://localhost:8080/auth/login"]
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -106,10 +105,11 @@ services:
       - "127.0.0.1:3000:80"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
-      interval: 30s
+      test: [ "CMD-SHELL", "curl -fsS http://localhost/ > /dev/null || exit 1" ]
+      interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 10s
 
 networks:
   katibu-net:
