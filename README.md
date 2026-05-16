@@ -585,11 +585,18 @@ Defined in `.github/workflows/ci.yml`. Triggers on every push and pull request t
 |-------|---------|--------------|
 | `test-frontend` | push + PR | Installs Node 20, runs `npm run test:unit -- --ci --coverage`, uploads coverage artifact |
 | `test-backend` | push + PR | Starts a Postgres 15 service container, runs `mvn -B test` with real DB |
-| `build-push` | push to `main` only | Builds and pushes `frontend`, `core`, and `gateway` Docker images **in parallel** to GHCR |
+| `build-push` | push to `main` only | Builds and pushes `frontend`, `core`, and `gateway` Docker images **in parallel** to Docker Hub |
 
 ### Docker images
 
-Images are pushed to the GitHub Container Registry under `ghcr.io/<owner>/katibu-<service>` with two tags: `latest` and `sha-<commit-sha>`.
+Images are pushed to Docker Hub as `<DOCKER_USERNAME>/katibu-<service>` with two tags: `latest` and `sha-<commit-sha>`.
+
+Required repository secrets (`Settings → Secrets and variables → Actions`):
+
+| Secret | Value |
+|--------|-------|
+| `DOCKER_USERNAME` | Docker Hub username |
+| `DOCKER_PASSWORD` | Docker Hub password or access token |
 
 ### Running frontend tests locally
 

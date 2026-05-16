@@ -19,7 +19,26 @@
       "Bash(curl -s -X POST http://localhost:8080/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"x\",\"password\":\"x\"}')",
       "Bash(docker exec *)",
       "Bash(curl -so /dev/null -w \"HTTP %{http_code}\" http://localhost:3000/)",
-      "Bash(curl -s -X POST http://localhost:8080/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"x\\\\\",\\\\\"password\\\\\":\\\\\"x\\\\\"}\")"
+      "Bash(curl -s -X POST http://localhost:8080/auth/login -H \"Content-Type: application/json\" -d \"{\\\\\"email\\\\\":\\\\\"x\\\\\",\\\\\"password\\\\\":\\\\\"x\\\\\"}\")",
+      "Bash(curl -s -X POST https://api.katibu.my/auth/register -H \"Content-Type: application/json\" -d '{\"fullName\":\"Test User\",\"email\":\"test@example.com\",\"password\":\"testpass123\"}')",
+      "Bash(curl -s -X POST https://api.katibu.my/auth/register -H \"Content-Type: application/json\" -d '{\"fullName\":\"\",\"email\":\"bad-email\",\"password\":\"short\"}')",
+      "Bash(curl -s -X POST https://api.katibu.my/auth/register -H \"Content-Type: application/json\" -d '{}')",
+      "Bash(curl -s -X POST https://api.katibu.my/auth/register -d 'not-json' -H \"Content-Type: application/json\")",
+      "Bash(curl -s -X POST https://api.katibu.my/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"test@example.com\",\"password\":\"testpass123\"}')",
+      "Bash(curl -s -X OPTIONS https://api.katibu.my/auth/register -H \"Origin: https://katibu.my\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: Content-Type\" -v)",
+      "Bash(curl -s https://api.katibu.my/users/me -H \"Content-Type: application/json\")",
+      "Bash(curl -s -X POST https://api.katibu.my/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"test@example.com\",\"password\":\"wrongpassword\"}')",
+      "Bash(curl -s https://api.katibu.my/actuator/health)",
+      "Bash(curl -s -X POST https://api.katibu.my/auth/register -H \"Content-Type: application/json\" -d '{\"fullName\":\"\",\"email\":\"bad\",\"password\":\"x\"}')",
+      "Bash(Get-ChildItem -Path \"E:\\\\Work\\\\katibu\\\\frontend\\\\src\\\\views\" -Recurse -File)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(npx jest *)",
+      "Bash(npm install *)",
+      "Bash(node -e \"const path=require\\('path'\\); const r=require.resolve; try { console.log\\(require.resolve\\('@vue/vue2-jest', {paths:['E:/Work/katibu/frontend/node_modules/@vue/cli-plugin-unit-jest/presets/default']}\\)\\); } catch\\(e\\) { console.log\\('fail:', e.message\\) }\")",
+      "PowerShell(git *)",
+      "PowerShell(Select-String *)",
+      "PowerShell(git -C \"E:\\\\Work\\\\katibu\" commit -m $msg)",
+      "Bash(xargs grep -l -i \"minio\")"
     ]
   }
 }
