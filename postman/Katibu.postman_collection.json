@@ -563,6 +563,99 @@
               }
             }
           ]
+        },
+        {
+          "name": "General Ledger",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/reports/general-ledger?startDate={{report_start}}&endDate={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["projects","{{project_id}}","reports","general-ledger"],
+              "query": [
+                { "key": "startDate", "value": "{{report_start}}" },
+                { "key": "endDate", "value": "{{report_end}}" }
+              ]
+            },
+            "description": "General Ledger with DR/CR entries and running balance. Inflows = Debit (cash received), Outflows = Credit (cash paid)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Has lines array', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.lines).to.be.an('array');",
+                  "  pm.expect(d.openingBalance).to.be.a('number');",
+                  "  pm.expect(d.closingBalance).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Trial Balance",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/reports/trial-balance?asAt={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["projects","{{project_id}}","reports","trial-balance"],
+              "query": [{ "key": "asAt", "value": "{{report_end}}" }]
+            },
+            "description": "Trial Balance as at a date. Shows DR/CR balances per account. Total debits should equal total credits."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Trial balance balances', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(parseFloat(d.totalDebits)).to.be.closeTo(parseFloat(d.totalCredits), 0.01);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Balance Sheet",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/reports/balance-sheet?asAt={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["projects","{{project_id}}","reports","balance-sheet"],
+              "query": [{ "key": "asAt", "value": "{{report_end}}" }]
+            },
+            "description": "Balance Sheet as at a date. Assets = Liabilities + Equity. Shows cash assets, outstanding liabilities, contributed capital and retained surplus."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Balance sheet equation holds', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  const rhs = parseFloat(d.totalLiabilities) + parseFloat(d.totalEquity);",
+                  "  pm.expect(parseFloat(d.totalAssets)).to.be.closeTo(rhs, 0.01);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -750,6 +843,90 @@
                 "exec": [
                   "pm.test('Status is 200', () => pm.response.to.have.status(200));",
                   "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Public General Ledger",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/public/{{public_token}}/general-ledger?startDate={{report_start}}&endDate={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["public","{{public_token}}","general-ledger"],
+              "query": [
+                { "key": "startDate", "value": "{{report_start}}" },
+                { "key": "endDate", "value": "{{report_end}}" }
+              ]
+            },
+            "description": "Access general ledger via public token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Has lines', () => pm.expect(pm.response.json().data.lines).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Public Trial Balance",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/public/{{public_token}}/trial-balance?asAt={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["public","{{public_token}}","trial-balance"],
+              "query": [{ "key": "asAt", "value": "{{report_end}}" }]
+            },
+            "description": "Access trial balance via public token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Balances', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(parseFloat(d.totalDebits)).to.be.closeTo(parseFloat(d.totalCredits), 0.01);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Public Balance Sheet",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/public/{{public_token}}/balance-sheet?asAt={{report_end}}",
+              "host": ["{{base_url}}"],
+              "path": ["public","{{public_token}}","balance-sheet"],
+              "query": [{ "key": "asAt", "value": "{{report_end}}" }]
+            },
+            "description": "Access balance sheet via public token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));",
+                  "pm.test('Equation holds', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(parseFloat(d.totalAssets)).to.be.closeTo(parseFloat(d.totalLiabilities) + parseFloat(d.totalEquity), 0.01);",
+                  "});"
                 ]
               }
             }

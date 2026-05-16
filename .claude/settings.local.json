@@ -38,7 +38,8 @@
       "PowerShell(git *)",
       "PowerShell(Select-String *)",
       "PowerShell(git -C \"E:\\\\Work\\\\katibu\" commit -m $msg)",
-      "Bash(xargs grep -l -i \"minio\")"
+      "Bash(xargs grep -l -i \"minio\")",
+      "Bash(powershell *)"
     ]
   }
 }

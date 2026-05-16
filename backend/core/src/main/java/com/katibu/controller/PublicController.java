@@ -53,4 +53,29 @@ public class PublicController {
         Project project = publicLinkService.resolveToken(token);
         return ApiResponse.ok(reportService.financialPositionPublic(project, asAt));
     }
+
+    @GetMapping("/{token}/general-ledger")
+    public ApiResponse<GeneralLedgerReport> generalLedger(
+            @PathVariable String token,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        Project project = publicLinkService.resolveToken(token);
+        return ApiResponse.ok(reportService.generalLedgerPublic(project, startDate, endDate));
+    }
+
+    @GetMapping("/{token}/trial-balance")
+    public ApiResponse<TrialBalanceReport> trialBalance(
+            @PathVariable String token,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate asAt) {
+        Project project = publicLinkService.resolveToken(token);
+        return ApiResponse.ok(reportService.trialBalancePublic(project, asAt));
+    }
+
+    @GetMapping("/{token}/balance-sheet")
+    public ApiResponse<BalanceSheetReport> balanceSheet(
+            @PathVariable String token,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate asAt) {
+        Project project = publicLinkService.resolveToken(token);
+        return ApiResponse.ok(reportService.balanceSheetPublic(project, asAt));
+    }
 }

@@ -1,4 +1,4 @@
-# Katibu Financial Management Platform
+﻿# Katibu Financial Management Platform
 
 A localised financial records, accountability, and reporting platform for users, teams, groups, and SMEs. Modelled after cash-based accounting principles with support for both **IPSAS** (cash basis) and **IFRS** reporting standards.
 
@@ -9,10 +9,13 @@ A localised financial records, accountability, and reporting platform for users,
 - **Projects (Ledgers)** — Each project is an independent financial ledger with a defined time period.
 - **Ledger Entries** — Record inflows (capital, donations, revenue, grants, loans, credits) and outflows (purchases, expenditures, loan repayments, debt payments, withdrawals).
 - **Financial Reports** — Generate reports aligned with cash-based IPSAS and IFRS:
+  - Summary Report
   - Statement of Receipts and Payments (IPSAS 2)
   - Cash Flow Statement (IFRS — Operating, Investing, Financing)
   - Statement of Financial Position
-  - Summary Report
+  - General Ledger (DR/CR entries with running balance)
+  - Trial Balance (per-account debit/credit totals, self-balancing)
+  - Balance Sheet (assets, liabilities, equity — accounting equation: A = L + E)
 - **Public Links** — Share read-only reports via token-based URLs with optional expiry.
 - **File Exports** — Download reports as PDF or CSV. Files are stored in MinIO.
 - **Project Archiving** — Completed projects can be archived (read-only). Reports remain accessible.
@@ -68,7 +71,7 @@ katibu/
 │   │       │   │   │       ├── ProjectStatus.java    # ACTIVE|ARCHIVED
 │   │       │   │   │       ├── MemberRole.java       # ADMIN
 │   │       │   │   │       ├── FileType.java         # PDF|CSV
-│   │       │   │   │       └── ReportType.java       # SUMMARY|RECEIPTS_PAYMENTS|CASH_FLOW|FINANCIAL_POSITION|LEDGER
+│   │       │   │   │       └── ReportType.java       # SUMMARY|RECEIPTS_PAYMENTS|CASH_FLOW|FINANCIAL_POSITION|GENERAL_LEDGER|TRIAL_BALANCE|BALANCE_SHEET|LEDGER
 │   │       │   │   ├── repository/
 │   │       │   │   │   ├── UserRepository.java
 │   │       │   │   │   ├── ProjectRepository.java    # findAccessibleByUserId (creator OR member)
@@ -111,7 +114,10 @@ katibu/
 │   │       │   │   │           ├── SummaryReport.java
 │   │       │   │   │           ├── ReceiptsPaymentsReport.java
 │   │       │   │   │           ├── CashFlowReport.java
-│   │       │   │   │           └── FinancialPositionReport.java
+│   │       │   │   │           ├── FinancialPositionReport.java
+│   │       │   │   │           ├── GeneralLedgerReport.java   # DR/CR lines + running balance
+│   │       │   │   │           ├── TrialBalanceReport.java    # per-account DR/CR totals
+│   │       │   │   │           └── BalanceSheetReport.java    # assets/liabilities/equity
 │   │       │   │   ├── service/
 │   │       │   │   │   ├── AuthService.java
 │   │       │   │   │   ├── ProjectService.java       # access control + CRUD
@@ -267,15 +273,17 @@ For fixed types, `endDate` is auto-calculated. `CUSTOM` requires explicit `endDa
 
 ### Reports
 
-All report endpoints require `startDate` and `endDate` query params (ISO date: `YYYY-MM-DD`).  
-Financial Position uses `asAt` (single date).
+Range reports use `startDate` and `endDate` query params (`YYYY-MM-DD`). Point-in-time reports use `asAt`.
 
-| Method | Path                                            | Description                            |
-|--------|-------------------------------------------------|----------------------------------------|
-| GET    | `/projects/{id}/reports/summary`                | Summary: totals, opening/closing       |
-| GET    | `/projects/{id}/reports/receipts-payments`      | IPSAS 2: receipts and payments by type |
-| GET    | `/projects/{id}/reports/cash-flow`              | IFRS: operating/investing/financing    |
-| GET    | `/projects/{id}/reports/financial-position`     | Balance sheet equivalent (`?asAt=`)    |
+| Method | Path                                            | Params              | Description                            |
+|--------|-------------------------------------------------|---------------------|----------------------------------------|
+| GET    | `/projects/{id}/reports/summary`                | `startDate, endDate`| Summary: totals, opening/closing       |
+| GET    | `/projects/{id}/reports/receipts-payments`      | `startDate, endDate`| IPSAS 2: receipts and payments by type |
+| GET    | `/projects/{id}/reports/cash-flow`              | `startDate, endDate`| IFRS: operating/investing/financing    |
+| GET    | `/projects/{id}/reports/financial-position`     | `asAt`              | Statement of financial position        |
+| GET    | `/projects/{id}/reports/general-ledger`         | `startDate, endDate`| DR/CR ledger with running balance      |
+| GET    | `/projects/{id}/reports/trial-balance`          | `asAt`              | Per-account DR/CR totals (self-balancing) |
+| GET    | `/projects/{id}/reports/balance-sheet`          | `asAt`              | Assets / liabilities / equity (A=L+E)  |
 
 ### Public Links
 
@@ -287,12 +295,17 @@ Financial Position uses `asAt` (single date).
 
 ### Public Access (No Auth)
 
+Same reports as the authenticated endpoints, accessed via a shared token. Params are identical.
+
 | Method | Path                                         | Description                        |
 |--------|----------------------------------------------|------------------------------------|
 | GET    | `/public/{token}/summary`                    | Public summary report              |
 | GET    | `/public/{token}/receipts-payments`          | Public receipts & payments report  |
 | GET    | `/public/{token}/cash-flow`                  | Public cash flow statement         |
 | GET    | `/public/{token}/financial-position`         | Public financial position          |
+| GET    | `/public/{token}/general-ledger`             | Public general ledger              |
+| GET    | `/public/{token}/trial-balance`              | Public trial balance               |
+| GET    | `/public/{token}/balance-sheet`              | Public balance sheet               |
 
 ### File Exports
 
@@ -302,7 +315,9 @@ Financial Position uses `asAt` (single date).
 | GET    | `/projects/{id}/files`                           | List generated files           |
 | GET    | `/projects/{id}/files/{fileId}/download`         | Download file (binary)         |
 
-**Export request body:** `{ "fileType": "PDF"|"CSV", "reportType": "SUMMARY"|"RECEIPTS_PAYMENTS"|"CASH_FLOW"|"FINANCIAL_POSITION"|"LEDGER", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD" }`
+**Export request body:** `{ "fileType": "PDF"|"CSV", "reportType": "SUMMARY"|"RECEIPTS_PAYMENTS"|"CASH_FLOW"|"FINANCIAL_POSITION"|"GENERAL_LEDGER"|"TRIAL_BALANCE"|"BALANCE_SHEET"|"LEDGER", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD" }`
+
+For point-in-time report types (`FINANCIAL_POSITION`, `TRIAL_BALANCE`, `BALANCE_SHEET`) `endDate` is used as the `asAt` value. `LEDGER` produces a raw entry CSV; `GENERAL_LEDGER` produces a structured 7-column DR/CR CSV.
 
 ---
 
@@ -557,6 +572,15 @@ For the **Cash Flow Statement**, entries are categorised:
 
 ### Financial Position
 The **Statement of Financial Position** shows cash on hand as the primary asset, outstanding loan liabilities, and net assets represented by initial capital plus accumulated surplus/deficit.
+
+### General Ledger
+The **General Ledger** presents a chronological DR/CR record of the cash account for a period. Convention: inflows are posted to the **Debit** column (cash received increases the cash balance); outflows are posted to the **Credit** column (cash paid decreases the balance). A running balance is maintained after each entry. `Closing Balance = Opening Balance + Total Debits − Total Credits`.
+
+### Trial Balance
+The **Trial Balance** lists each account with its total debit or credit balance as at a given date. The cash/bank account shows its net balance as a debit. Income-type entry groups show as credits; expense-type groups show as debits. Total debits always equal total credits (proof: Cash DR = Inflows − Outflows; Expense DR = Outflows; Total DR = Inflows = Income CR = Total CR).
+
+### Balance Sheet
+The **Balance Sheet** applies the accounting equation `Assets = Liabilities + Equity`. Cash and cash equivalents are the sole asset. Liabilities are outstanding loans (loans received minus repayments) and debt payments. Equity is contributed capital (sum of `INITIAL_CAPITAL` entries) plus retained surplus/deficit (total equity minus contributed capital).
 
 ---
 

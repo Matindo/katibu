@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -67,6 +68,39 @@ public class ReportService {
     @Transactional(readOnly = true)
     public FinancialPositionReport financialPositionPublic(Project project, LocalDate asAt) {
         return buildFinancialPosition(project, asAt);
+    }
+
+    @Transactional(readOnly = true)
+    public GeneralLedgerReport generalLedger(UUID projectId, LocalDate startDate, LocalDate endDate, String userEmail) {
+        Project project = projectService.requireAccessible(projectId, userEmail);
+        return buildGeneralLedger(project, startDate, endDate);
+    }
+
+    @Transactional(readOnly = true)
+    public GeneralLedgerReport generalLedgerPublic(Project project, LocalDate startDate, LocalDate endDate) {
+        return buildGeneralLedger(project, startDate, endDate);
+    }
+
+    @Transactional(readOnly = true)
+    public TrialBalanceReport trialBalance(UUID projectId, LocalDate asAt, String userEmail) {
+        Project project = projectService.requireAccessible(projectId, userEmail);
+        return buildTrialBalance(project, asAt);
+    }
+
+    @Transactional(readOnly = true)
+    public TrialBalanceReport trialBalancePublic(Project project, LocalDate asAt) {
+        return buildTrialBalance(project, asAt);
+    }
+
+    @Transactional(readOnly = true)
+    public BalanceSheetReport balanceSheet(UUID projectId, LocalDate asAt, String userEmail) {
+        Project project = projectService.requireAccessible(projectId, userEmail);
+        return buildBalanceSheet(project, asAt);
+    }
+
+    @Transactional(readOnly = true)
+    public BalanceSheetReport balanceSheetPublic(Project project, LocalDate asAt) {
+        return buildBalanceSheet(project, asAt);
     }
 
     private SummaryReport buildSummary(Project project, LocalDate startDate, LocalDate endDate) {
@@ -162,6 +196,94 @@ public class ReportService {
         return new FinancialPositionReport(project.getId(), project.getName(), asAt,
                 cash, cash, outstandingLoans, debts, totalLiabilities,
                 netAssets, initialCapital, accumulated, LocalDateTime.now());
+    }
+
+    private GeneralLedgerReport buildGeneralLedger(Project project, LocalDate startDate, LocalDate endDate) {
+        BigDecimal opening = netPosition(entryRepository.findByProjectIdBeforeDate(project.getId(), startDate));
+        List<LedgerEntry> period = entryRepository.findByProjectIdAndDateRange(project.getId(), startDate, endDate)
+                .stream().sorted(Comparator.comparing(LedgerEntry::getTransactionDate)).collect(Collectors.toList());
+
+        List<GeneralLedgerReport.Line> lines = new ArrayList<>();
+        BigDecimal runningBalance = opening;
+        BigDecimal totalDebits = BigDecimal.ZERO;
+        BigDecimal totalCredits = BigDecimal.ZERO;
+
+        for (LedgerEntry e : period) {
+            // Cash account: inflows = DR (cash received), outflows = CR (cash paid)
+            BigDecimal debit = e.getEntryType().isInflow() ? e.getAmount() : BigDecimal.ZERO;
+            BigDecimal credit = e.getEntryType().isInflow() ? BigDecimal.ZERO : e.getAmount();
+            runningBalance = runningBalance.add(debit).subtract(credit);
+            totalDebits = totalDebits.add(debit);
+            totalCredits = totalCredits.add(credit);
+            lines.add(new GeneralLedgerReport.Line(
+                    e.getTransactionDate(), formatLabel(e.getEntryType()),
+                    e.getDescription(), e.getReference(),
+                    debit, credit, runningBalance));
+        }
+
+        return new GeneralLedgerReport(project.getId(), project.getName(), startDate, endDate,
+                opening, lines, totalDebits, totalCredits, runningBalance, LocalDateTime.now());
+    }
+
+    private TrialBalanceReport buildTrialBalance(Project project, LocalDate asAt) {
+        List<LedgerEntry> all = entryRepository.findByProjectIdUpToDate(project.getId(), asAt);
+
+        BigDecimal cashBalance = netPosition(all);
+
+        Map<EntryType, BigDecimal> byType = all.stream()
+                .collect(Collectors.groupingBy(LedgerEntry::getEntryType,
+                        Collectors.reducing(BigDecimal.ZERO, LedgerEntry::getAmount, BigDecimal::add)));
+
+        List<TrialBalanceReport.AccountLine> accounts = new ArrayList<>();
+        // Cash/Bank is an asset — debit balance
+        accounts.add(new TrialBalanceReport.AccountLine("CASH", "Cash / Bank", cashBalance, BigDecimal.ZERO));
+
+        for (Map.Entry<EntryType, BigDecimal> e : byType.entrySet()) {
+            EntryType type = e.getKey();
+            BigDecimal amt = e.getValue();
+            // Income types (inflows) → credit; expense types (outflows) → debit
+            if (type.isInflow()) {
+                accounts.add(new TrialBalanceReport.AccountLine(type.name(), formatLabel(type), BigDecimal.ZERO, amt));
+            } else {
+                accounts.add(new TrialBalanceReport.AccountLine(type.name(), formatLabel(type), amt, BigDecimal.ZERO));
+            }
+        }
+
+        BigDecimal totalDebits = accounts.stream().map(TrialBalanceReport.AccountLine::debit)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalCredits = accounts.stream().map(TrialBalanceReport.AccountLine::credit)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new TrialBalanceReport(project.getId(), project.getName(), asAt,
+                accounts, totalDebits, totalCredits, LocalDateTime.now());
+    }
+
+    private BalanceSheetReport buildBalanceSheet(Project project, LocalDate asAt) {
+        List<LedgerEntry> all = entryRepository.findByProjectIdUpToDate(project.getId(), asAt);
+
+        BigDecimal cash = netPosition(all);
+
+        BigDecimal loansReceived = sumByType(all, EntryType.LOAN_RECEIVED);
+        BigDecimal loansRepaid = sumByType(all, EntryType.LOAN_REPAYMENT);
+        BigDecimal outstandingLoans = loansReceived.subtract(loansRepaid).max(BigDecimal.ZERO);
+        BigDecimal debts = sumByType(all, EntryType.DEBT_PAYMENT);
+
+        List<BalanceSheetReport.LiabilityLine> liabilityLines = new ArrayList<>();
+        if (outstandingLoans.compareTo(BigDecimal.ZERO) > 0) {
+            liabilityLines.add(new BalanceSheetReport.LiabilityLine("Outstanding Loans", outstandingLoans));
+        }
+        if (debts.compareTo(BigDecimal.ZERO) > 0) {
+            liabilityLines.add(new BalanceSheetReport.LiabilityLine("Outstanding Debts", debts));
+        }
+
+        BigDecimal totalLiabilities = outstandingLoans.add(debts);
+        BigDecimal totalEquity = cash.subtract(totalLiabilities);
+        BigDecimal contributedCapital = sumByType(all, EntryType.INITIAL_CAPITAL);
+        BigDecimal retainedSurplus = totalEquity.subtract(contributedCapital);
+
+        return new BalanceSheetReport(project.getId(), project.getName(), asAt,
+                cash, cash, liabilityLines, totalLiabilities,
+                contributedCapital, retainedSurplus, totalEquity, LocalDateTime.now());
     }
 
     private BigDecimal netPosition(List<LedgerEntry> entries) {

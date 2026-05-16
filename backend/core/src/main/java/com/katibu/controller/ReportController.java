@@ -52,4 +52,29 @@ public class ReportController {
             Authentication auth) {
         return ApiResponse.ok(reportService.financialPosition(projectId, asAt, auth.getName()));
     }
+
+    @GetMapping("/general-ledger")
+    public ApiResponse<GeneralLedgerReport> generalLedger(
+            @PathVariable UUID projectId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Authentication auth) {
+        return ApiResponse.ok(reportService.generalLedger(projectId, startDate, endDate, auth.getName()));
+    }
+
+    @GetMapping("/trial-balance")
+    public ApiResponse<TrialBalanceReport> trialBalance(
+            @PathVariable UUID projectId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate asAt,
+            Authentication auth) {
+        return ApiResponse.ok(reportService.trialBalance(projectId, asAt, auth.getName()));
+    }
+
+    @GetMapping("/balance-sheet")
+    public ApiResponse<BalanceSheetReport> balanceSheet(
+            @PathVariable UUID projectId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate asAt,
+            Authentication auth) {
+        return ApiResponse.ok(reportService.balanceSheet(projectId, asAt, auth.getName()));
+    }
 }

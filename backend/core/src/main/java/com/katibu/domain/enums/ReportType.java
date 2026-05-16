@@ -5,5 +5,8 @@ public enum ReportType {
     RECEIPTS_PAYMENTS,
     CASH_FLOW,
     FINANCIAL_POSITION,
+    GENERAL_LEDGER,
+    TRIAL_BALANCE,
+    BALANCE_SHEET,
     LEDGER
 }

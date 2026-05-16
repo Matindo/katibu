@@ -23,13 +23,16 @@
                 <option value="receipts-payments">Receipts &amp; Payments</option>
                 <option value="cash-flow">Cash Flow Statement</option>
                 <option value="financial-position">Financial Position</option>
+                <option value="general-ledger">General Ledger</option>
+                <option value="trial-balance">Trial Balance</option>
+                <option value="balance-sheet">Balance Sheet</option>
               </select>
             </div>
             <div class="form-group" style="margin-bottom:0">
-              <label>{{ reportType === 'financial-position' ? 'As at date' : 'Start date' }}</label>
+              <label>{{ isAsAt ? 'As at date' : 'Start date' }}</label>
               <input v-model="startDate" type="date" class="field"/>
             </div>
-            <div v-if="reportType !== 'financial-position'" class="form-group" style="margin-bottom:0">
+            <div v-if="!isAsAt" class="form-group" style="margin-bottom:0">
               <label>End date</label>
               <input v-model="endDate" type="date" class="field"/>
             </div>
@@ -96,6 +99,74 @@
             </div>
             <div class="rp-balance"><div class="rp-bal-row highlight"><span>Net Assets</span><span class="in big">{{ fmt(report.netAssets) }}</span></div></div>
           </template>
+
+          <!-- General Ledger -->
+          <template v-else-if="reportType === 'general-ledger'">
+            <div class="rp-section">
+              <div class="rp-hd">Opening Balance: {{ fmt(report.openingBalance) }}</div>
+              <table class="gl-table">
+                <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Ref</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead>
+                <tbody>
+                  <tr v-for="(line, i) in report.lines" :key="i">
+                    <td class="mono">{{ line.date }}</td>
+                    <td>{{ line.entryType }}</td>
+                    <td class="desc">{{ line.description }}</td>
+                    <td class="mono">{{ line.reference || '' }}</td>
+                    <td class="num in">{{ line.debit > 0 ? fmt(line.debit) : '' }}</td>
+                    <td class="num out">{{ line.credit > 0 ? fmt(line.credit) : '' }}</td>
+                    <td class="num fw-600">{{ fmt(line.balance) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="rp-balance">
+              <div class="rp-bal-row"><span>Total Debits</span><span class="in">{{ fmt(report.totalDebits) }}</span></div>
+              <div class="rp-bal-row"><span>Total Credits</span><span class="out">{{ fmt(report.totalCredits) }}</span></div>
+              <div class="rp-bal-row highlight"><span>Closing Balance</span><span class="in big">{{ fmt(report.closingBalance) }}</span></div>
+            </div>
+          </template>
+
+          <!-- Trial Balance -->
+          <template v-else-if="reportType === 'trial-balance'">
+            <table class="gl-table">
+              <thead><tr><th>Account</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead>
+              <tbody>
+                <tr v-for="(acc, i) in report.accounts" :key="i">
+                  <td>{{ acc.label }}</td>
+                  <td class="num in">{{ acc.debit > 0 ? fmt(acc.debit) : '' }}</td>
+                  <td class="num out">{{ acc.credit > 0 ? fmt(acc.credit) : '' }}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td class="fw-600">Totals</td>
+                  <td class="num fw-600 in">{{ fmt(report.totalDebits) }}</td>
+                  <td class="num fw-600 out">{{ fmt(report.totalCredits) }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </template>
+
+          <!-- Balance Sheet -->
+          <template v-else-if="reportType === 'balance-sheet'">
+            <div class="rp-section">
+              <div class="rp-hd in">Assets</div>
+              <div class="rp-line"><span>Cash and Cash Equivalents</span><span class="in">{{ fmt(report.cashAndEquivalents) }}</span></div>
+              <div class="rp-line total"><span>Total Assets</span><span class="in">{{ fmt(report.totalAssets) }}</span></div>
+            </div>
+            <div class="rp-section">
+              <div class="rp-hd out">Liabilities</div>
+              <div v-for="(l, i) in report.liabilityLines" :key="i" class="rp-line"><span>{{ l.description }}</span><span class="out">{{ fmt(l.amount) }}</span></div>
+              <div class="rp-line total"><span>Total Liabilities</span><span class="out">{{ fmt(report.totalLiabilities) }}</span></div>
+            </div>
+            <div class="rp-section">
+              <div class="rp-hd">Equity</div>
+              <div class="rp-line"><span>Contributed Capital</span><span>{{ fmt(report.contributedCapital) }}</span></div>
+              <div class="rp-line"><span>Retained Surplus / (Deficit)</span><span>{{ fmt(report.retainedSurplus) }}</span></div>
+              <div class="rp-line total"><span>Total Equity</span><span>{{ fmt(report.totalEquity) }}</span></div>
+            </div>
+            <div class="rp-balance"><div class="rp-bal-row highlight"><span>Assets = Liabilities + Equity</span><span class="in big">{{ fmt(report.totalAssets) }}</span></div></div>
+          </template>
         </div>
 
         <p class="pub-footer">
@@ -123,8 +194,17 @@ export default {
   },
   computed: {
     token () { return this.$route.params.token },
+    isAsAt () { return ['financial-position', 'trial-balance', 'balance-sheet'].includes(this.reportType) },
     reportLabel () {
-      return { summary: 'Summary Report', 'receipts-payments': 'Statement of Receipts & Payments', 'cash-flow': 'Cash Flow Statement', 'financial-position': 'Statement of Financial Position' }[this.reportType]
+      return {
+        summary: 'Summary Report',
+        'receipts-payments': 'Statement of Receipts & Payments',
+        'cash-flow': 'Cash Flow Statement',
+        'financial-position': 'Statement of Financial Position',
+        'general-ledger': 'General Ledger',
+        'trial-balance': 'Trial Balance',
+        'balance-sheet': 'Balance Sheet'
+      }[this.reportType]
     }
   },
   methods: {
@@ -134,7 +214,15 @@ export default {
         const t = this.token
         const p = { startDate: this.startDate, endDate: this.endDate }
         const a = { asAt: this.startDate }
-        const map = { summary: () => api.public.summary(t, p), 'receipts-payments': () => api.public.receiptsPayments(t, p), 'cash-flow': () => api.public.cashFlow(t, p), 'financial-position': () => api.public.financialPosition(t, a) }
+        const map = {
+          summary: () => api.public.summary(t, p),
+          'receipts-payments': () => api.public.receiptsPayments(t, p),
+          'cash-flow': () => api.public.cashFlow(t, p),
+          'financial-position': () => api.public.financialPosition(t, a),
+          'general-ledger': () => api.public.generalLedger(t, p),
+          'trial-balance': () => api.public.trialBalance(t, a),
+          'balance-sheet': () => api.public.balanceSheet(t, a)
+        }
         this.report = await map[this.reportType]()
       } catch (e) { this.error = e?.message || 'Failed to load report. The link may have expired or been revoked.' }
       finally { this.loading = false }
@@ -180,6 +268,15 @@ export default {
 .rp-bal-row .in  { color: var(--green-deep); }
 .rp-bal-row .out { color: #C0392B; }
 .rp-bal-row .big { font-family: 'Playfair Display', serif; font-size: 1.3rem; }
+
+.gl-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 8px; }
+.gl-table th { text-align: left; padding: 6px 8px; border-bottom: 2px solid var(--border-sub); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-light); }
+.gl-table td { padding: 6px 8px; border-bottom: 1px solid rgba(0,0,0,0.04); color: var(--text-mid); }
+.gl-table tfoot td { border-top: 2px solid var(--border-sub); font-weight: 700; color: var(--text-dark); border-bottom: none; }
+.gl-table .desc { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gl-table .mono { font-family: monospace; font-size: 0.82rem; }
+.num { text-align: right; }
+.fw-600 { font-weight: 600; }
 
 .pub-footer { text-align: center; margin-top: 40px; font-size: 0.875rem; color: var(--text-light); }
 .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }

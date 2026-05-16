@@ -207,6 +207,9 @@ public class FileExportService {
         if (reportType == ReportType.LEDGER) {
             return buildLedgerCsv(project, start, end);
         }
+        if (reportType == ReportType.GENERAL_LEDGER) {
+            return buildGeneralLedgerCsv(project, start, end);
+        }
         List<String[]> rows = buildReportRows(project, reportType, start, end);
         StringWriter writer = new StringWriter();
         try (CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
@@ -247,6 +250,9 @@ public class FileExportService {
             case RECEIPTS_PAYMENTS -> rpRows(reportService.receiptsPaymentsPublic(project, start, end));
             case CASH_FLOW -> cashFlowRows(reportService.cashFlowPublic(project, start, end));
             case FINANCIAL_POSITION -> fpRows(reportService.financialPositionPublic(project, end));
+            case GENERAL_LEDGER -> glRows(reportService.generalLedgerPublic(project, start, end));
+            case TRIAL_BALANCE -> tbRows(reportService.trialBalancePublic(project, end));
+            case BALANCE_SHEET -> bsRows(reportService.balanceSheetPublic(project, end));
             case LEDGER -> List.of();
         };
     }
@@ -337,6 +343,92 @@ public class FileExportService {
                 new String[]{"  Accumulated Surplus/(Deficit)", fmt(r.accumulatedSurplusDeficit())},
                 new String[]{"Total", fmt(r.netAssets()), "H"}
         );
+    }
+
+    private byte[] buildGeneralLedgerCsv(Project project, LocalDate start, LocalDate end) throws Exception {
+        GeneralLedgerReport report = reportService.generalLedgerPublic(project, start, end);
+        StringWriter writer = new StringWriter();
+        try (CSVPrinter printer = new CSVPrinter(writer,
+                CSVFormat.DEFAULT.builder()
+                        .setHeader("Date", "Type", "Description", "Reference", "Debit", "Credit", "Balance")
+                        .build())) {
+            for (GeneralLedgerReport.Line l : report.lines()) {
+                printer.printRecord(
+                        l.date(), l.entryType(), l.description(),
+                        l.reference() != null ? l.reference() : "",
+                        l.debit().compareTo(BigDecimal.ZERO) > 0 ? l.debit() : "",
+                        l.credit().compareTo(BigDecimal.ZERO) > 0 ? l.credit() : "",
+                        l.balance());
+            }
+        }
+        return writer.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    private List<String[]> glRows(GeneralLedgerReport r) {
+        List<String[]> rows = new java.util.ArrayList<>();
+        rows.add(new String[]{"GENERAL LEDGER", "", "H"});
+        rows.add(new String[]{"Period: " + r.startDate() + " to " + r.endDate(), ""});
+        rows.add(new String[]{});
+        rows.add(new String[]{"Opening Balance", fmt(r.openingBalance())});
+        rows.add(new String[]{});
+        for (GeneralLedgerReport.Line l : r.lines()) {
+            String label = l.date() + "  " + l.entryType();
+            String amtStr = l.debit().compareTo(BigDecimal.ZERO) > 0
+                    ? "DR " + fmt(l.debit()) + "  Bal " + fmt(l.balance())
+                    : "CR " + fmt(l.credit()) + "  Bal " + fmt(l.balance());
+            rows.add(new String[]{label, amtStr});
+            if (l.description() != null && !l.description().isBlank()) {
+                rows.add(new String[]{"  " + truncate(l.description(), 60), ""});
+            }
+        }
+        rows.add(new String[]{});
+        rows.add(new String[]{"Total Debits", fmt(r.totalDebits()), "H"});
+        rows.add(new String[]{"Total Credits", fmt(r.totalCredits()), "H"});
+        rows.add(new String[]{"Closing Balance", fmt(r.closingBalance()), "H"});
+        return rows;
+    }
+
+    private List<String[]> tbRows(TrialBalanceReport r) {
+        List<String[]> rows = new java.util.ArrayList<>();
+        rows.add(new String[]{"TRIAL BALANCE", "", "H"});
+        rows.add(new String[]{"As at: " + r.asAt(), ""});
+        rows.add(new String[]{});
+        for (TrialBalanceReport.AccountLine a : r.accounts()) {
+            String amtStr = a.debit().compareTo(BigDecimal.ZERO) > 0
+                    ? fmt(a.debit()) + "  DR" : fmt(a.credit()) + "  CR";
+            rows.add(new String[]{a.label(), amtStr});
+        }
+        rows.add(new String[]{});
+        rows.add(new String[]{"Total Debits", fmt(r.totalDebits()), "H"});
+        rows.add(new String[]{"Total Credits", fmt(r.totalCredits()), "H"});
+        return rows;
+    }
+
+    private List<String[]> bsRows(BalanceSheetReport r) {
+        List<String[]> rows = new java.util.ArrayList<>();
+        rows.add(new String[]{"BALANCE SHEET", "", "H"});
+        rows.add(new String[]{"As at: " + r.asAt(), ""});
+        rows.add(new String[]{});
+        rows.add(new String[]{"ASSETS", "", "H"});
+        rows.add(new String[]{"  Cash and Cash Equivalents", fmt(r.cashAndEquivalents())});
+        rows.add(new String[]{"Total Assets", fmt(r.totalAssets()), "H"});
+        rows.add(new String[]{});
+        rows.add(new String[]{"LIABILITIES", "", "H"});
+        for (BalanceSheetReport.LiabilityLine l : r.liabilityLines()) {
+            rows.add(new String[]{"  " + l.description(), fmt(l.amount())});
+        }
+        rows.add(new String[]{"Total Liabilities", fmt(r.totalLiabilities()), "H"});
+        rows.add(new String[]{});
+        rows.add(new String[]{"EQUITY", "", "H"});
+        rows.add(new String[]{"  Contributed Capital", fmt(r.contributedCapital())});
+        rows.add(new String[]{"  Retained Surplus / (Deficit)", fmt(r.retainedSurplus())});
+        rows.add(new String[]{"Total Equity", fmt(r.totalEquity()), "H"});
+        return rows;
+    }
+
+    private String truncate(String s, int max) {
+        if (s == null || s.length() <= max) return s;
+        return s.substring(0, max - 3) + "...";
     }
 
     private String fmt(BigDecimal value) {

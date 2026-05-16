@@ -75,7 +75,10 @@ export default {
     summary: (projectId, params) => api.get(`/projects/${projectId}/reports/summary`, { params }),
     receiptsPayments: (projectId, params) => api.get(`/projects/${projectId}/reports/receipts-payments`, { params }),
     cashFlow: (projectId, params) => api.get(`/projects/${projectId}/reports/cash-flow`, { params }),
-    financialPosition: (projectId, params) => api.get(`/projects/${projectId}/reports/financial-position`, { params })
+    financialPosition: (projectId, params) => api.get(`/projects/${projectId}/reports/financial-position`, { params }),
+    generalLedger: (projectId, params) => api.get(`/projects/${projectId}/reports/general-ledger`, { params }),
+    trialBalance: (projectId, params) => api.get(`/projects/${projectId}/reports/trial-balance`, { params }),
+    balanceSheet: (projectId, params) => api.get(`/projects/${projectId}/reports/balance-sheet`, { params })
   },
 
   // Public links
@@ -104,6 +107,9 @@ export default {
     summary: (token, params) => api.get(`/public/${token}/summary`, { params }),
     receiptsPayments: (token, params) => api.get(`/public/${token}/receipts-payments`, { params }),
     cashFlow: (token, params) => api.get(`/public/${token}/cash-flow`, { params }),
-    financialPosition: (token, params) => api.get(`/public/${token}/financial-position`, { params })
+    financialPosition: (token, params) => api.get(`/public/${token}/financial-position`, { params }),
+    generalLedger: (token, params) => api.get(`/public/${token}/general-ledger`, { params }),
+    trialBalance: (token, params) => api.get(`/public/${token}/trial-balance`, { params }),
+    balanceSheet: (token, params) => api.get(`/public/${token}/balance-sheet`, { params })
   }
 }
