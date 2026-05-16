@@ -41,6 +41,7 @@ A localised financial records, accountability, and reporting platform for users,
 ```
 katibu/
 ├── pom.xml                          # Parent Maven POM (modules: core, gateway)
+├── .gitignore                       # Covers root, Java/Maven, Node.js/Vue, Spring env files
 ├── README.md
 │
 ├── backend/
@@ -88,6 +89,8 @@ katibu/
 │   │       │   │   │   ├── request/
 │   │       │   │   │   │   ├── RegisterRequest.java
 │   │       │   │   │   │   ├── LoginRequest.java
+│   │       │   │   │   │   ├── UpdateProfileRequest.java
+│   │       │   │   │   │   ├── ChangePasswordRequest.java
 │   │       │   │   │   │   ├── CreateProjectRequest.java
 │   │       │   │   │   │   ├── UpdateProjectRequest.java
 │   │       │   │   │   │   ├── AddMemberRequest.java
@@ -98,6 +101,7 @@ katibu/
 │   │       │   │   │   └── response/
 │   │       │   │   │       ├── ApiResponse.java      # {success, data, message}
 │   │       │   │   │       ├── AuthResponse.java
+│   │       │   │   │       ├── UserResponse.java
 │   │       │   │   │       ├── ProjectResponse.java
 │   │       │   │   │       ├── MemberResponse.java
 │   │       │   │   │       ├── LedgerEntryResponse.java
@@ -118,6 +122,7 @@ katibu/
 │   │       │   │   │   └── MinioService.java         # upload/download
 │   │       │   │   └── controller/
 │   │       │   │       ├── AuthController.java        # POST /auth/register|login
+│   │       │   │       ├── UserController.java        # GET|PUT /users/me, PUT /users/me/password
 │   │       │   │       ├── ProjectController.java     # /projects/**
 │   │       │   │       ├── LedgerController.java      # /projects/{id}/entries/**
 │   │       │   │       ├── ReportController.java      # /projects/{id}/reports/**
@@ -188,6 +193,16 @@ All responses follow the envelope: `{ "success": true|false, "data": {...}, "mes
 |--------|--------------------|------|------------------------|
 | POST   | `/auth/register`   | No   | Register a new account |
 | POST   | `/auth/login`      | No   | Login, receive JWT     |
+
+### User Profile
+
+| Method | Path                  | Auth   | Description                                     |
+|--------|-----------------------|--------|-------------------------------------------------|
+| GET    | `/users/me`           | Bearer | Get authenticated user's profile                |
+| PUT    | `/users/me`           | Bearer | Update full name and/or email                   |
+| PUT    | `/users/me/password`  | Bearer | Change password (requires current password)     |
+
+**Change password body:** `{ "currentPassword": "...", "newPassword": "..." }` (newPassword ≥ 8 chars)
 
 ### Projects
 

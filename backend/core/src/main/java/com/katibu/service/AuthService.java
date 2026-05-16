@@ -1,9 +1,12 @@
 package com.katibu.service;
 
 import com.katibu.domain.entity.User;
+import com.katibu.dto.request.ChangePasswordRequest;
 import com.katibu.dto.request.LoginRequest;
 import com.katibu.dto.request.RegisterRequest;
+import com.katibu.dto.request.UpdateProfileRequest;
 import com.katibu.dto.response.AuthResponse;
+import com.katibu.dto.response.UserResponse;
 import com.katibu.exception.BusinessException;
 import com.katibu.exception.ResourceNotFoundException;
 import com.katibu.repository.UserRepository;
@@ -51,5 +54,34 @@ public class AuthService {
     public User requireByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponse getProfile(String email) {
+        User user = requireByEmail(email);
+        return new UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getCreatedAt());
+    }
+
+    @Transactional
+    public UserResponse updateProfile(String email, UpdateProfileRequest request) {
+        User user = requireByEmail(email);
+        String newEmail = request.email().toLowerCase();
+        if (!newEmail.equals(user.getEmail()) && userRepository.existsByEmail(newEmail)) {
+            throw new BusinessException("Email already in use");
+        }
+        user.setEmail(newEmail);
+        user.setFullName(request.fullName());
+        user = userRepository.save(user);
+        return new UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getCreatedAt());
+    }
+
+    @Transactional
+    public void changePassword(String email, ChangePasswordRequest request) {
+        User user = requireByEmail(email);
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new BusinessException("Current password is incorrect");
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
     }
 }

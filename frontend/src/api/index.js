@@ -74,6 +74,13 @@ export default {
     download: (projectId, fileId) => api.get(`/projects/${projectId}/files/${fileId}/download`, { responseType: 'blob' })
   },
 
+  // User profile
+  users: {
+    me: () => api.get('/users/me'),
+    update: data => api.put('/users/me', data),
+    changePassword: data => api.put('/users/me/password', data)
+  },
+
   // Public (no auth)
   public: {
     summary: (token, params) => api.get(`/public/${token}/summary`, { params }),

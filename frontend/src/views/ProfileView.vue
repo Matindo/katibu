@@ -94,6 +94,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import api from '../api'
 
 export default {
   name: 'ProfileView',
@@ -103,18 +104,29 @@ export default {
       pw: { current: '', next: '', confirm: '' },
       detailsLoading: false, detailsError: '', detailsSuccess: '',
       pwLoading: false, pwError: '', pwSuccess: '',
-      showPw: false
+      showPw: false,
+      createdAt: null
     }
   },
   computed: {
     ...mapGetters(['currentUser']),
-    memberSince () { return 'Katibu member' },
+    memberSince () {
+      if (!this.createdAt) return '—'
+      return new Date(this.createdAt).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })
+    },
     userId () { return this.currentUser?.id ? String(this.currentUser.id).slice(0, 8) + '…' : '—' }
   },
-  created () {
-    if (this.currentUser) {
-      this.details.fullName = this.currentUser.fullName || ''
-      this.details.email = this.currentUser.email || ''
+  async created () {
+    try {
+      const profile = await api.users.me()
+      this.details.fullName = profile.data.fullName || ''
+      this.details.email = profile.data.email || ''
+      this.createdAt = profile.data.createdAt
+    } catch {
+      if (this.currentUser) {
+        this.details.fullName = this.currentUser.fullName || ''
+        this.details.email = this.currentUser.email || ''
+      }
     }
   },
   methods: {
@@ -122,8 +134,8 @@ export default {
       this.detailsError = ''; this.detailsSuccess = ''
       this.detailsLoading = true
       try {
-        // API call would go here: await api.users.update(this.details)
-        this.$store.dispatch('updateUser', this.details)
+        const res = await api.users.update(this.details)
+        this.$store.dispatch('updateUser', { fullName: res.data.fullName, email: res.data.email })
         this.detailsSuccess = 'Details updated successfully.'
       } catch (e) {
         this.detailsError = e?.message || 'Failed to update details.'
@@ -136,7 +148,7 @@ export default {
       if (this.pw.next !== this.pw.confirm) { this.pwError = 'New passwords do not match.'; return }
       this.pwLoading = true
       try {
-        // API call: await api.users.changePassword({ current: this.pw.current, password: this.pw.next })
+        await api.users.changePassword({ currentPassword: this.pw.current, newPassword: this.pw.next })
         this.pwSuccess = 'Password updated successfully.'
         this.pw = { current: '', next: '', confirm: '' }
       } catch (e) {
