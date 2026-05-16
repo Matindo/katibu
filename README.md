@@ -148,6 +148,8 @@ katibu/
 │               └── GatewayApplicationTests.java
 │
 ├── frontend/                         # Vue.js 2 PWA (Options API, no Vite)
+│   ├── Dockerfile                    # Multi-stage: node:20-alpine build → nginx:stable-alpine serve
+│   ├── nginx.conf                    # SPA fallback + cache headers (copied into container)
 │   ├── package.json
 │   ├── vue.config.js                 # PWA plugin config (name, icons, workbox)
 │   ├── jest.config.js
@@ -166,12 +168,17 @@ katibu/
 │       ├── store/
 │       │   └── index.js              # Vuex store (auth state)
 │       ├── views/
+│       │   ├── HomeView.vue          # Landing page
+│       │   ├── AboutView.vue         # Feature tour with CSS mockups
+│       │   ├── LicenseView.vue       # License / T&C / Privacy tabs
+│       │   ├── ProfileView.vue       # Edit details + change password
 │       │   ├── auth/                 # LoginView, RegisterView
-│       │   ├── projects/             # ProjectListView, CreateProjectView, ProjectDetailView
-│       │   ├── ledger/               # LedgerView, EntryFormView
+│       │   ├── projects/             # ProjectsView, ProjectView (dashboard)
 │       │   ├── reports/              # ReportsView
-│       │   └── public/               # PublicReportView
-│       └── components/               # Shared components (to be built)
+│       │   └── public/               # PublicReportView (no auth)
+│       └── components/
+│           ├── NavBar.vue            # Sticky glass navbar + user dropdown + mobile drawer
+│           └── AppFooter.vue         # Dark footer with links and Bysonic Inc. trademark
 │
 ├── nginx/
 │   ├── api.katibu.my.conf            # NPM reference (proxy host settings)
@@ -349,6 +356,7 @@ All client requests go to **port 8080** (gateway).
 | `PUBLIC_BASE_URL`   | `http://localhost:8080`                   | Base URL embedded in public link URLs |
 | `CORE_SERVICE_URL`  | `http://localhost:8081`                   | Gateway → Core routing               |
 | `ALLOWED_ORIGINS`   | `*`                                       | Comma-separated CORS origins (gateway) |
+| `VUE_APP_API_URL`   | `https://api.katibu.my`                   | API base URL baked into the frontend bundle at build time |
 
 ---
 
@@ -368,17 +376,18 @@ Internet
   │
   ▼
 Nginx Proxy Manager (TLS termination)
-  ├── api.katibu.my  ──▶  127.0.0.1:8080  ──▶  [gateway container]
+  ├── api.katibu.my  ──▶  127.0.0.1:8080  ──▶  [gateway container :8080]
   │                                                      │
   │                                                      ▼
   │                                            [core container :8081]
   │                                            [postgres container]
   │                                            [minio container]
   │
-  └── katibu.my  ──▶  frontend dist (static files)
+  └── katibu.my  ──▶  127.0.0.1:3000  ──▶  [frontend container :80]
+                                             (nginx:stable-alpine + Vue dist)
 ```
 
-The gateway binds only to `127.0.0.1:8080`. Nothing inside Docker is directly reachable from the internet. Nginx Proxy Manager handles TLS and reverse proxying.
+Both the gateway (`:8080`) and frontend (`:3000`) bind to `127.0.0.1` only — nothing is directly reachable from the internet. Nginx Proxy Manager handles TLS and reverse proxying for both.
 
 ### 1. VPS prerequisites
 
@@ -409,9 +418,12 @@ openssl rand -hex 32
 
 Key production values:
 ```
-PUBLIC_BASE_URL=https://katibu.my
+PUBLIC_BASE_URL=https://api.katibu.my
 ALLOWED_ORIGINS=https://katibu.my,https://www.katibu.my
+VUE_APP_API_URL=https://api.katibu.my
 ```
+
+> **Important:** `VUE_APP_API_URL` is baked into the Vue.js bundle at build time by Vue CLI. It must be set in `.env` **before** running `docker compose up --build`. Changing it after the build requires a rebuild of the `frontend` image.
 
 ### 4. Build and start all containers
 
@@ -433,7 +445,10 @@ docker compose logs -f
 - Scheme: `http`
 - Enable SSL via Let's Encrypt in the SSL tab
 
-**katibu.my** (static site or proxy host pointing to wherever you serve `frontend/dist/`):
+**katibu.my** (proxy host → frontend container):
+- Forward Hostname / IP: `127.0.0.1`
+- Forward Port: `3000`
+- Scheme: `http`
 - Enable SSL via Let's Encrypt in the SSL tab
 - In the **Advanced** tab, add this to the Custom Nginx Configuration field:
 
@@ -443,22 +458,22 @@ location / {
 }
 ```
 
-This is required because Vue Router runs in history mode. Without it, any URL opened directly (e.g. `katibu.my/projects/123`) returns a 404 from the web server instead of letting Vue Router handle it client-side.
+This is a safety net for NPM's proxy layer. The frontend container's internal nginx already includes this directive, so Vue Router deep links work regardless.
 
-### 6. Build and deploy the frontend
-
-```bash
-cd frontend
-npm install
-npm run build
-# Copy frontend/dist/ to wherever katibu.my is served from
-```
-
-### 7. Verify
+### 6. Verify
 
 ```bash
+# API gateway is up
 curl https://api.katibu.my/auth/login
-# → {"success":false,"message":"Invalid credentials"}  (server is up)
+# → {"success":false,"message":"..."}  (server is responding)
+
+# Frontend is up
+curl -s -o /dev/null -w "%{http_code}" https://katibu.my/
+# → 200
+
+# SPA routing works (deep link must return 200, not 404)
+curl -s -o /dev/null -w "%{http_code}" https://katibu.my/projects/test
+# → 200
 ```
 
 ### Useful operations

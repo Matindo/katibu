@@ -62,9 +62,8 @@ services:
       - katibu-net
     restart: unless-stopped
     healthcheck:
-      # curl returns 0 as long as the server responds, regardless of HTTP status code.
-      # A 400 from the auth endpoint means Spring Boot is up.
-      test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://localhost:8081/api/auth/login"]
+      # A 400 from the auth endpoint means Spring Boot is up and responding.
+      test: ["CMD", "curl", "-sf", "-o", "/dev/null", "http://localhost:8081/auth/login"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -75,8 +74,7 @@ services:
       context: .
       dockerfile: backend/gateway/Dockerfile
     container_name: katibu-gateway
-    # Bind to loopback only — nginx on the host proxies to this port.
-    # Nothing on the internet reaches the gateway directly.
+    # Bind to loopback only — Nginx Proxy Manager on the host proxies to this port.
     ports:
       - "127.0.0.1:8080:8080"
     environment:
@@ -89,11 +87,29 @@ services:
       - katibu-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://localhost:8080/api/auth/login"]
+      test: ["CMD", "curl", "-sf", "-o", "/dev/null", "http://localhost:8080/auth/login"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+      args:
+        # Baked into the JS bundle at build time — set to your production API domain.
+        VUE_APP_API_URL: ${VUE_APP_API_URL:-https://api.katibu.my}
+    container_name: katibu-frontend
+    # Bind to loopback only — Nginx Proxy Manager on the host proxies to this port.
+    ports:
+      - "127.0.0.1:3000:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 networks:
   katibu-net:

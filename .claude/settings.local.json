@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(git -C \"E:/Work/katibu\" log --oneline)",
-      "PowerShell(New-Item *)"
+      "PowerShell(New-Item *)",
+      "Bash(docker compose *)",
+      "Bash(docker info *)",
+      "PowerShell(Start-Process \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\")",
+      "Bash(docker run *)",
+      "Bash(curl -si http://localhost:3000/)",
+      "Bash(docker stop *)",
+      "Bash(curl -si http://localhost:3000/projects/123)"
     ]
   }
 }
