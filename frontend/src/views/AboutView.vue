@@ -137,7 +137,8 @@
                 <div class="shot-report-tabs">
                   <span class="shot-tab active">Receipts &amp; Payments</span>
                   <span class="shot-tab">Cash Flow</span>
-                  <span class="shot-tab">Fin. Position</span>
+                  <span class="shot-tab">General Ledger</span>
+                  <span class="shot-tab">…</span>
                 </div>
                 <div class="shot-report-meta">Jan 1 – Mar 31, 2024 &nbsp;|&nbsp; IPSAS 2 (Cash Basis)</div>
                 <div class="shot-report-section">
@@ -159,15 +160,18 @@
           </div>
           <div class="feature-text">
             <span class="section-eyebrow">Financial Reports</span>
-            <h2>Four report types, one click</h2>
+            <h2>Seven report types, one click</h2>
             <p>
-              Generate any of four recognised report formats for any date range inside your project period.
+              Generate any of seven recognised report formats for any date range inside your project period.
               All calculations are strict cash-basis — no accruals, no estimates.
             </p>
             <ul class="feature-list">
               <li><strong>Statement of Receipts &amp; Payments</strong> — IPSAS 2 cash basis</li>
               <li><strong>Cash Flow Statement</strong> — IFRS: operating, investing &amp; financing</li>
-              <li><strong>Financial Position</strong> — assets, liabilities, net assets</li>
+              <li><strong>Statement of Financial Position</strong> — assets, liabilities, net assets</li>
+              <li><strong>General Ledger</strong> — full transaction history with running balance</li>
+              <li><strong>Trial Balance</strong> — debits and credits self-balancing proof</li>
+              <li><strong>Balance Sheet</strong> — assets = liabilities + equity (accounting equation)</li>
               <li><strong>Summary Report</strong> — quick totals and closing balance</li>
             </ul>
           </div>
